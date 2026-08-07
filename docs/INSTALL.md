@@ -6,6 +6,21 @@ Requires **Node.js** (`node -v`) for the duck bridge. Prefer Chrome/Edge for the
 
 After install: reload the IDE → **Agent** chat → **Start a rubber duck session**.
 
+### Prerequisite — upgrade `gh` if needed
+
+`gh skill` shipped in **v2.90.0**. If you see `unknown command "skill" for "gh"`:
+
+```bash
+gh --version          # need 2.90.0 or newer
+brew upgrade gh       # macOS Homebrew
+# or: https://github.com/cli/cli/releases
+gh --version          # confirm >= 2.90
+```
+
+No upgrade yet? Use **manual copy** or `./scripts/install.sh --manual` below — those do not need `gh skill`.
+
+**Coding agents installing on behalf of a user:** follow **[INSTALL-FOR-LLMS.md](INSTALL-FOR-LLMS.md)** (ordered strategies + verify + session start).
+
 ---
 
 ## Recommended — GitHub CLI
