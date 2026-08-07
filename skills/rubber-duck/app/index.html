@@ -101,17 +101,16 @@
       grid-area: top;
       z-index: 3;
       display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 0.65rem 1rem;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.55rem;
       padding: 1.05rem clamp(0.9rem, 2.4vw, 1.6rem) 0.15rem 0.35rem;
       animation: rise 0.6s ease both;
     }
 
     .brand-block {
       max-width: min(100%, 22rem);
-      text-align: left;
+      text-align: right;
       text-shadow: 0 2px 22px rgba(0,0,0,0.72), 0 1px 3px rgba(0,0,0,0.85);
     }
 
@@ -287,15 +286,17 @@
       grid-area: words;
       z-index: 2;
       width: 100%;
-      max-width: 36rem;
       margin: 0;
       padding: 0.2rem clamp(0.85rem, 2.2vw, 1.4rem) 0.45rem 0.25rem;
       text-align: left;
       animation: rise 0.7s 0.05s ease both;
       min-height: 0;
+      display: flex;
+      justify-content: flex-end;
     }
 
     .words-panel {
+      width: min(100%, 36rem);
       padding: 0.8rem 0.95rem;
       border-radius: 1rem;
       background: rgba(10, 14, 12, 0.55);
