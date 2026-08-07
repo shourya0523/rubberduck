@@ -6,24 +6,31 @@
   <title>Rubber Duck — Explain</title>
   <style>
     :root {
-      --paper: #f2ece0;
-      --paper-deep: #e6ddcf;
-      --ink: #1d2428;
-      --ink-soft: rgba(29, 36, 40, 0.66);
-      --ink-faint: rgba(29, 36, 40, 0.45);
-      --lamp: #f4d9a3;
-      --duck: #f2b230;
-      --duck-deep: #d99a1e;
-      --duck-shadow: #c98d1a;
-      --beak: #e8722a;
-      --beak-deep: #d45f1c;
-      --desk: #42545c;
-      --desk-deep: #314148;
-      --line: rgba(29, 36, 40, 0.14);
+      --paper: #f3ebe0;
+      --paper-deep: #cfc2ad;
+      --ink: #f3ebe0;
+      --ink-dark: #141816;
+      --ink-soft: rgba(243, 235, 224, 0.78);
+      --ink-faint: rgba(243, 235, 224, 0.52);
+      --lamp: #d99a45;
+      --lamp-hot: #f0bd68;
+      --duck: #eab52d;
+      --duck-deep: #c88e18;
+      --duck-shadow: #a97212;
+      --beak: #de6b2f;
+      --beak-deep: #b94d1f;
+      --desk: #1a211c;
+      --desk-deep: #0c100e;
+      --forest: #1a2e24;
+      --line: rgba(243, 235, 224, 0.14);
       --ok: #2e6b4f;
       --bad: #9b3b3b;
       --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
       --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
+      --bg-photo: url("/assets/desk-bg.webp");
+      --bg-pos: 78% 36%;
+      --lamp-col: minmax(10rem, 42%);
+      --stream-max: min(30vh, 11.5rem);
     }
 
     * { box-sizing: border-box; }
@@ -37,45 +44,89 @@
     }
 
     body {
-      background:
-        radial-gradient(ellipse 90% 62% at 50% 34%, rgba(244, 217, 163, 0.5), transparent 62%),
-        linear-gradient(180deg, #dfd3c0 0%, var(--paper) 34%, var(--paper-deep) 58%, var(--desk) 58.2%, var(--desk-deep) 100%);
+      background-color: var(--desk-deep);
+      /* Lamp stays bright on the left; soft read scrim only on the right wall + desk band */
+      background-image:
+        linear-gradient(180deg, transparent 0%, transparent 62%, rgba(6,8,7,0.35) 78%, rgba(6,8,7,0.78) 100%),
+        linear-gradient(90deg, transparent 0%, transparent 34%, rgba(8,12,10,0.22) 52%, rgba(8,12,10,0.5) 78%, rgba(8,12,10,0.58) 100%),
+        radial-gradient(ellipse 46% 52% at 22% 42%, rgba(240,189,104,0.14), transparent 68%),
+        var(--bg-photo);
+      background-size: cover, cover, cover, cover;
+      background-position: center, center, 18% 40%, var(--bg-pos);
+      background-repeat: no-repeat;
+      transition: filter 0.35s ease;
     }
     body.listening {
-      background:
-        radial-gradient(ellipse 95% 68% at 50% 32%, rgba(242, 178, 48, 0.42), transparent 60%),
-        linear-gradient(180deg, #e8d5ac 0%, var(--paper) 34%, var(--paper-deep) 58%, var(--desk) 58.2%, var(--desk-deep) 100%);
+      filter: saturate(1.08) brightness(1.04);
     }
 
+    @media (min-width: 720px) {
+      :root {
+        --bg-photo: url("/assets/desk-bg-wide.webp");
+        --bg-pos: 62% 58%;
+        --lamp-col: minmax(15rem, 44%);
+        --stream-max: min(28vh, 13rem);
+      }
+    }
+
+    /*
+      Composition:
+      - Left column = lamp clearance (photo element, no chrome)
+      - Right column = brand → large duck on dark wall → streaming panel
+      - Bottom band = controls on shadowed desk
+    */
     .world {
       min-height: 100dvh;
       height: 100%;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: var(--lamp-col) minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        "lamp top"
+        "lamp stage"
+        "lamp words"
+        "bottom bottom";
       position: relative;
+      isolation: isolate;
+      column-gap: clamp(0.25rem, 1.5vw, 1rem);
+    }
+
+    .lamp-zone {
+      grid-area: lamp;
+      pointer-events: none;
+      z-index: 0;
     }
 
     .top {
+      grid-area: top;
       z-index: 3;
       display: flex;
-      align-items: baseline;
+      flex-wrap: wrap;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 1rem;
-      padding: 1.1rem 1.4rem 0.3rem;
+      gap: 0.65rem 1rem;
+      padding: 1.05rem clamp(0.9rem, 2.4vw, 1.6rem) 0.15rem 0.35rem;
       animation: rise 0.6s ease both;
+    }
+
+    .brand-block {
+      max-width: min(100%, 22rem);
+      text-align: left;
+      text-shadow: 0 2px 22px rgba(0,0,0,0.72), 0 1px 3px rgba(0,0,0,0.85);
     }
 
     .brand {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.8rem, 4.6vw, 2.7rem);
+      font-size: clamp(1.9rem, 4.4vw, 3rem);
       font-weight: 700;
       letter-spacing: -0.03em;
-      line-height: 0.95;
+      line-height: 0.92;
+      color: var(--paper);
     }
 
     .mode {
-      margin: 0.15rem 0 0;
+      margin: 0.28rem 0 0;
       font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.14em;
@@ -86,35 +137,56 @@
     .phase {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.82rem;
+      gap: 0.45rem;
+      margin-top: 0.2rem;
+      padding: 0.42rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: var(--ink-soft);
+      color: var(--paper);
       white-space: nowrap;
+      background: rgba(12, 18, 15, 0.48);
+      border: 1px solid rgba(243,235,224,0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
     }
     .phase-dot {
       width: 0.42rem;
       height: 0.42rem;
       border-radius: 50%;
       background: var(--ink-faint);
+      flex: 0 0 auto;
     }
-    .phase-dot.listening { background: var(--duck-deep); }
-    .phase-dot.waiting { background: var(--desk); }
+    .phase-dot.listening { background: var(--lamp-hot); box-shadow: 0 0 10px rgba(240,189,104,0.7); }
+    .phase-dot.waiting { background: var(--ink-faint); }
     .phase-dot.error { background: var(--bad); }
 
-    /* ————— Duck (hand-drawn character) ————— */
+    /* ————— Large duck on the dark wall patch ————— */
     .duck-stage {
+      grid-area: stage;
       z-index: 1;
       min-height: 0;
       display: grid;
-      place-items: center;
-      padding: 0 1rem;
+      place-items: center end;
+      padding: 0.15rem clamp(0.6rem, 2vw, 1.4rem) 0.1rem 0;
+      position: relative;
     }
 
     .duck {
-      width: min(78vw, 400px);
+      width: min(96%, 560px);
+      max-height: min(62vh, 560px);
       height: auto;
       overflow: visible;
+      justify-self: end;
+      filter: drop-shadow(0 24px 30px rgba(0,0,0,0.58));
+      animation: duck-in 0.85s 0.1s ease both;
+      transition: width 0.35s ease, max-height 0.35s ease;
+    }
+    /* While a long reply streams, ease duck down slightly so the panel can grow */
+    body.is-streaming .duck {
+      width: min(88%, 460px);
+      max-height: min(50vh, 460px);
     }
 
     .duck * {
@@ -124,9 +196,9 @@
 
     .duck__all { transform-origin: 50% 82%; }
 
-    .duck[data-state="base"] .duck__all { animation: bob 3.4s ease-in-out infinite; }
-    .duck[data-state="thinking"] .duck__all { animation: sway 3s ease-in-out infinite; }
-    .duck[data-state="excited"] .duck__all { animation: bounce 0.62s cubic-bezier(0.34, 0.8, 0.4, 1) 3; }
+    .duck.is-transition[data-state="base"] .duck__all { animation: settle 0.7s ease-out 1; }
+    .duck.is-transition[data-state="thinking"] .duck__all { animation: consider 0.8s ease-out 1; }
+    .duck.is-transition[data-state="excited"] .duck__all { animation: bounce 0.62s cubic-bezier(0.34, 0.8, 0.4, 1) 2; }
 
     .duck__head {
       transform-origin: 58% 88%;
@@ -134,6 +206,7 @@
     }
     .duck[data-state="thinking"] .duck__head { transform: rotate(-9deg) translate(-2px, 3px); }
     .duck[data-state="excited"] .duck__head { transform: rotate(2deg) translateY(-3px); }
+    .duck.is-listening .duck__head { transform: rotate(4deg) translate(2px, 2px); }
 
     .duck__beak {
       transform-origin: left center;
@@ -188,16 +261,16 @@
       stroke: rgba(29, 36, 40, 0.18);
       stroke-width: 2.5;
     }
-    .duck[data-state="base"] .duck__ripple { animation: ripple 3.4s ease-in-out infinite; }
-    .duck[data-state="excited"] .duck__ripple { animation: ripple 0.7s ease-out 3; }
+    .duck.is-transition .duck__ripple { animation: ripple 0.7s ease-out 2; }
 
-    @keyframes bob {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-8px) rotate(-1.2deg); }
+    @keyframes settle {
+      0% { transform: translateY(-7px) rotate(-1deg); }
+      100% { transform: translateY(0) rotate(0deg); }
     }
-    @keyframes sway {
-      0%, 100% { transform: translateY(0) rotate(-1.5deg); }
-      50% { transform: translateY(3px) rotate(-3deg); }
+    @keyframes consider {
+      0% { transform: translateY(0) rotate(0deg); }
+      55% { transform: translateY(2px) rotate(-2.2deg); }
+      100% { transform: translateY(0) rotate(-1.5deg); }
     }
     @keyframes bounce {
       0%, 100% { transform: translateY(0) scale(1); }
@@ -209,20 +282,44 @@
       50% { opacity: 0.9; transform: scaleX(1.06); }
     }
 
-    /* ————— Words ————— */
+    /* ————— Streaming panel under the duck, right of the lamp ————— */
     .words {
+      grid-area: words;
       z-index: 2;
-      width: min(100%, 38rem);
-      margin: 0 auto;
-      padding: 0 1.25rem 0.4rem;
-      text-align: center;
+      width: 100%;
+      max-width: 36rem;
+      margin: 0;
+      padding: 0.2rem clamp(0.85rem, 2.2vw, 1.4rem) 0.45rem 0.25rem;
+      text-align: left;
       animation: rise 0.7s 0.05s ease both;
+      min-height: 0;
+    }
+
+    .words-panel {
+      padding: 0.8rem 0.95rem;
+      border-radius: 1rem;
+      background: rgba(10, 14, 12, 0.55);
+      border: 1px solid rgba(243,235,224,0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+      max-height: var(--stream-max);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(243,235,224,0.28) transparent;
+      transition: max-height 0.3s ease, background 0.25s ease;
+    }
+    body.is-streaming .words-panel {
+      background: rgba(10, 14, 12, 0.66);
+      max-height: min(36vh, 15rem);
     }
 
     .invite {
-      margin: 0 0 0.6rem;
+      margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+      font-size: clamp(1.08rem, 2.1vw, 1.3rem);
       font-weight: 600;
       line-height: 1.35;
       color: var(--ink-soft);
@@ -230,12 +327,12 @@
     .invite.hide { display: none; }
 
     .you-block {
-      margin: 0 0 0.5rem;
-      font-size: clamp(1.05rem, 2.3vw, 1.3rem);
+      margin: 0;
+      font-size: clamp(1rem, 2vw, 1.18rem);
       font-weight: 600;
       line-height: 1.4;
-      color: var(--ink);
-      min-height: 1.4em;
+      color: var(--paper);
+      min-height: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -247,42 +344,44 @@
     }
 
     .nudge {
-      margin: 0 auto;
-      max-width: 34rem;
-      font-size: 0.98rem;
+      margin: 0.45rem 0 0;
+      font-size: 0.95rem;
       font-weight: 500;
       line-height: 1.45;
       color: var(--ink-faint);
-      min-height: 1.35em;
+      min-height: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .nudge:empty { min-height: 0; }
+    .nudge:empty { display: none; margin: 0; }
     .nudge.streaming::after {
       content: " ·";
-      color: var(--duck-deep);
+      color: var(--lamp-hot);
       animation: blink 1s steps(1) infinite;
     }
 
-    /* ————— Bottom ————— */
+    /* ————— Bottom controls on shadowed desk edge ————— */
     .bottom {
+      grid-area: bottom;
       z-index: 3;
-      padding: 0.45rem 1rem 1.3rem;
+      padding: 0.4rem 1rem 1.2rem;
       display: grid;
       justify-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       animation: rise 0.75s 0.08s ease both;
+      background: linear-gradient(180deg, transparent 0%, rgba(6,8,7,0.4) 40%, rgba(6,8,7,0.7) 100%);
     }
 
     .hold {
       appearance: none;
       border: 0;
       width: min(92vw, 21rem);
-      min-height: 3.55rem;
+      min-height: 3.45rem;
       padding: 0.8rem 1.2rem;
       border-radius: 999px;
-      background: var(--ink);
+      background: rgba(22, 28, 25, 0.82);
       color: var(--paper);
+      border: 1px solid rgba(243,235,224,0.18);
       font: inherit;
       font-size: 1rem;
       font-weight: 700;
@@ -290,24 +389,28 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      box-shadow: 0 10px 26px rgba(29, 36, 40, 0.25);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
     .hold:hover { transform: translateY(-1px); }
     .hold:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .hold.armed {
-      background: var(--duck);
-      color: var(--ink);
+      background: var(--lamp);
+      color: var(--ink-dark);
+      border-color: transparent;
       box-shadow:
-        0 0 0 6px rgba(242, 178, 48, 0.3),
-        0 12px 30px rgba(29, 36, 40, 0.2);
+        0 0 0 6px rgba(242, 178, 48, 0.28),
+        0 12px 30px rgba(0, 0, 0, 0.28);
     }
 
     .hold-hint {
       margin: 0;
       font-size: 0.78rem;
       font-weight: 600;
-      color: rgba(242, 236, 224, 0.78);
+      color: rgba(243, 235, 224, 0.72);
+      text-shadow: 0 1px 8px rgba(0,0,0,0.55);
     }
 
     .secondary {
@@ -346,8 +449,8 @@
     .sheet, .log {
       position: fixed;
       z-index: 6;
-      background: var(--paper);
-      color: var(--ink);
+      background: #1d2122;
+      color: var(--paper);
       box-shadow: 0 -16px 48px rgba(29, 36, 40, 0.3);
       transition: transform 0.28s ease;
     }
@@ -370,8 +473,8 @@
       resize: vertical;
       border: 1px solid var(--line);
       border-radius: 0.75rem;
-      background: rgba(255, 255, 255, 0.5);
-      color: var(--ink);
+      background: rgba(255,255,255,0.04);
+      color: var(--paper);
       font: inherit;
       font-weight: 600;
       padding: 0.75rem 0.85rem;
@@ -395,7 +498,7 @@
       cursor: pointer;
     }
     .btn.ghost { background: transparent; color: var(--ink-soft); }
-    .btn.solid { background: var(--ink); color: var(--paper); }
+    .btn.solid { background: var(--lamp); color: var(--ink-dark); }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     .log {
@@ -424,7 +527,7 @@
       appearance: none;
       border: 0;
       background: transparent;
-      color: var(--ink);
+      color: var(--paper);
       font-size: 1.4rem;
       cursor: pointer;
       line-height: 1;
@@ -439,7 +542,7 @@
       font-weight: 600;
       font-size: 0.95rem;
     }
-    .log-stream .you { color: var(--ink); }
+    .log-stream .you { color: var(--paper); }
     .log-stream .duck { color: var(--ink-soft); font-weight: 500; }
     .log-stream .label {
       display: block;
@@ -454,24 +557,59 @@
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes duck-in {
+      from { opacity: 0; transform: translateY(18px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
     @keyframes blink { 50% { opacity: 0; } }
 
-    @media (max-width: 640px) {
-      .top { padding: 0.9rem 1rem 0.2rem; }
-      .duck { width: min(86vw, 330px); }
-      .hold { min-height: 3.3rem; }
+    @media (max-width: 720px) {
+      .world {
+        grid-template-columns: minmax(3.75rem, 24%) minmax(0, 1fr);
+        --stream-max: min(26vh, 9.5rem);
+      }
+      .top { padding: 0.85rem 0.85rem 0.1rem 0.15rem; }
+      .brand { font-size: clamp(1.65rem, 7.5vw, 2.15rem); }
+      .duck {
+        width: min(98%, 340px);
+        max-height: min(46vh, 340px);
+      }
+      body.is-streaming .duck {
+        width: min(90%, 270px);
+        max-height: min(36vh, 270px);
+      }
+      .words { padding-inline: 0.55rem 0.7rem; }
+      .words-panel { padding: 0.7rem 0.8rem; }
+      .hold { min-height: 3.25rem; }
+      :root { --bg-pos: 86% 40%; }
+    }
+
+    @media (min-width: 1100px) {
+      .duck {
+        width: min(94%, 580px);
+        max-height: min(64vh, 580px);
+      }
+      body.is-streaming .duck {
+        width: min(86%, 480px);
+        max-height: min(52vh, 480px);
+      }
+      .words { max-width: 40rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .duck .duck__all { animation: none; }
+      .duck { animation: none; transition: none; }
       .nudge.streaming::after { animation: none; }
+      body.is-streaming .duck,
+      .words-panel { transition: none; }
     }
   </style>
 </head>
 <body>
   <div class="world">
+    <div class="lamp-zone" aria-hidden="true"></div>
     <header class="top">
-      <div>
+      <div class="brand-block">
         <h1 class="brand">Rubber Duck</h1>
         <p class="mode">Explain</p>
       </div>
@@ -484,7 +622,7 @@
     <main class="duck-stage" aria-label="Rubber duck">
       <svg class="duck" id="duck" data-state="base" viewBox="0 0 220 200" role="img" aria-label="Rubber duck">
         <g class="duck__all">
-          <ellipse class="duck__shadow" cx="110" cy="176" rx="72" ry="10" fill="rgba(29,36,40,0.14)"/>
+          <ellipse class="duck__shadow" cx="110" cy="176" rx="72" ry="10" fill="rgba(8,12,10,0.45)"/>
           <ellipse class="duck__ripple" cx="110" cy="180" rx="92" ry="12"/>
 
           <g class="duck__wing-l">
@@ -530,9 +668,11 @@
     </main>
 
     <section class="words" aria-live="polite">
-      <p class="invite" id="invite">Explain the code out loud. The duck listens.</p>
-      <p class="you-block" id="youLine"></p>
-      <p class="nudge" id="nudgeLine"></p>
+      <div class="words-panel">
+        <p class="invite" id="invite">Explain the code out loud. The duck listens.</p>
+        <p class="you-block" id="youLine"></p>
+        <p class="nudge" id="nudgeLine"></p>
+      </div>
     </section>
 
     <footer class="bottom">
@@ -586,8 +726,13 @@
     let micReady = false;
     let speechSupported = false;
     let holdPointerId = null;
+    let holdRequested = false;
     let logDuckBody = null;
     let finalBuffer = "";
+    let stateAnimTimer = null;
+    let nudgeRenderTimer = null;
+
+    const wordsPanel = document.querySelector(".words-panel");
 
     function setPhase(text, kind = "") {
       phaseText.textContent = text;
@@ -604,22 +749,42 @@
 
     function setDuckState(state) {
       if (!STATES.includes(state)) return;
+      if (duck.dataset.state === state) return;
       duck.dataset.state = state;
+      duck.classList.remove("is-transition");
+      void duck.getBoundingClientRect();
+      duck.classList.add("is-transition");
+      clearTimeout(stateAnimTimer);
+      stateAnimTimer = setTimeout(() => {
+        duck.classList.remove("is-transition");
+      }, state === "excited" ? 1350 : 850);
     }
 
     function hideInvite() {
       invite.classList.add("hide");
     }
 
+    function setStreaming(on) {
+      document.body.classList.toggle("is-streaming", on);
+    }
+
+    function scrollWordsToEnd() {
+      if (!wordsPanel) return;
+      wordsPanel.scrollTop = wordsPanel.scrollHeight;
+    }
+
     function setYouText(text, interim = false) {
       if (text) hideInvite();
       youLine.textContent = text || "";
       youLine.classList.toggle("interim", interim);
+      scrollWordsToEnd();
     }
 
     function setNudge(text, streaming = false) {
       nudgeLine.textContent = text || "";
       nudgeLine.classList.toggle("streaming", streaming);
+      setStreaming(streaming && Boolean(text));
+      scrollWordsToEnd();
     }
 
     function appendLogYou(text) {
@@ -644,16 +809,25 @@
     function appendLogToken(text) {
       const body = ensureLogDuck();
       body.textContent += text;
-      setNudge(body.textContent, true);
+      setStreaming(true);
+      if (!nudgeRenderTimer) {
+        nudgeRenderTimer = setTimeout(() => {
+          nudgeRenderTimer = null;
+          if (logDuckBody) setNudge(logDuckBody.textContent, true);
+        }, 110);
+      }
       streamEl.scrollTop = streamEl.scrollHeight;
     }
 
     function finishLogDuck() {
+      clearTimeout(nudgeRenderTimer);
+      nudgeRenderTimer = null;
       if (logDuckBody) {
         setNudge(logDuckBody.textContent || "", false);
         logDuckBody = null;
       }
       nudgeLine.classList.remove("streaming");
+      setStreaming(false);
     }
 
     function escapeHtml(s) {
@@ -801,8 +975,13 @@
       recognition.lang = navigator.language || "en-US";
 
       recognition.onstart = () => {
+        if (!holdRequested) {
+          recognition.stop();
+          return;
+        }
         listening = true;
         finalBuffer = "";
+        duck.classList.add("is-listening");
         holdBtn.classList.add("armed");
         holdBtn.textContent = "Listening… release to send";
         setPhase("Listening", "listening");
@@ -811,9 +990,11 @@
       recognition.onend = () => {
         const wasListening = listening;
         listening = false;
+        duck.classList.remove("is-listening");
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         holdPointerId = null;
+        holdRequested = false;
         if (!busy) setPhase("The duck listens");
         if (!wasListening) return;
         const toSend = finalBuffer.trim() || youLine.textContent.trim();
@@ -828,6 +1009,8 @@
 
       recognition.onerror = (e) => {
         listening = false;
+        holdRequested = false;
+        duck.classList.remove("is-listening");
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         if (e.error === "not-allowed") {
@@ -851,8 +1034,14 @@
 
     async function startHold(pointerId) {
       if (busy || listening || !speechSupported) return;
-      if (!(await ensureMic())) return;
+      holdRequested = true;
       holdPointerId = pointerId ?? "keys";
+      if (!(await ensureMic())) {
+        holdRequested = false;
+        holdPointerId = null;
+        return;
+      }
+      if (!holdRequested || holdPointerId !== (pointerId ?? "keys")) return;
       try {
         recognition.start();
       } catch {
@@ -861,10 +1050,11 @@
     }
 
     function stopHold(pointerId) {
-      if (!listening) return;
       if (holdPointerId != null && pointerId != null && holdPointerId !== pointerId && holdPointerId !== "keys") {
         return;
       }
+      holdRequested = false;
+      if (!listening) return;
       try { recognition.stop(); } catch { /* ignore */ }
     }
 

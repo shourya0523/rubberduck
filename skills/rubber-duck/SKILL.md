@@ -111,7 +111,7 @@ Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them
 
 ## Duck
 
-The duck is inline SVG + CSS inside `app/index.html`. Switch state by setting `data-state` on the SVG (`base`, `thinking`, `excited`). No image assets required.
+The duck is inline SVG + CSS inside `app/index.html`. Switch state by setting `data-state` on the SVG (`base`, `thinking`, `excited`). The night-desk photo backgrounds live in `assets/` (`desk-bg.webp`, `desk-bg-wide.webp`) and are served by the bridge.
 
 ## Ending
 
