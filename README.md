@@ -23,7 +23,15 @@ gh skill install shourya0523/rubberduck rubber-duck --scope user
 ./scripts/install.sh --manual --scope user
 ```
 
-Needs [GitHub CLI](https://cli.github.com/) **2.90+** for `gh skill`, and **Node.js** for the duck bridge.
+Needs [GitHub CLI](https://cli.github.com/) **2.90+** (`gh skill` was added in 2.90). If `gh skill` is unknown:
+
+```bash
+brew upgrade gh && gh --version
+```
+
+Or skip `gh` and use `./scripts/install.sh --manual --scope user` / the manual copy steps in [docs/INSTALL.md](docs/INSTALL.md).
+
+Also needs **Node.js** for the duck bridge.
 
 Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
 
