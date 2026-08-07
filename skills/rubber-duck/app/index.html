@@ -6,12 +6,12 @@
   <title>Rubber Duck — Explain</title>
   <style>
     :root {
-      --paper: #e9e1d3;
+      --paper: #f3ebe0;
       --paper-deep: #cfc2ad;
-      --ink: #e9e1d3;
-      --ink-dark: #181b1c;
-      --ink-soft: rgba(233, 225, 211, 0.68);
-      --ink-faint: rgba(233, 225, 211, 0.44);
+      --ink: #f3ebe0;
+      --ink-dark: #141816;
+      --ink-soft: rgba(243, 235, 224, 0.78);
+      --ink-faint: rgba(243, 235, 224, 0.52);
       --lamp: #d99a45;
       --lamp-hot: #f0bd68;
       --duck: #eab52d;
@@ -19,13 +19,16 @@
       --duck-shadow: #a97212;
       --beak: #de6b2f;
       --beak-deep: #b94d1f;
-      --desk: #202426;
-      --desk-deep: #121516;
-      --line: rgba(233, 225, 211, 0.12);
+      --desk: #1a211c;
+      --desk-deep: #0c100e;
+      --forest: #1a2e24;
+      --line: rgba(243, 235, 224, 0.14);
       --ok: #2e6b4f;
       --bad: #9b3b3b;
       --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
       --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
+      --bg-photo: url("/assets/desk-bg.webp");
+      --bg-pos: 72% 38%;
     }
 
     * { box-sizing: border-box; }
@@ -39,76 +42,63 @@
     }
 
     body {
-      background:
-        radial-gradient(ellipse 46% 65% at 50% 39%, rgba(217, 154, 69, 0.34), transparent 67%),
-        repeating-linear-gradient(91deg, transparent 0 44px, rgba(255,255,255,0.012) 45px, transparent 47px 88px),
-        linear-gradient(180deg, #181b1c 0%, #161819 57%, #202426 57.2%, #111415 100%);
-      transition: background 0.35s ease;
+      background-color: var(--desk-deep);
+      background-image:
+        linear-gradient(180deg, rgba(8,12,10,0.55) 0%, rgba(8,12,10,0.18) 28%, rgba(8,12,10,0.08) 48%, rgba(8,12,10,0.42) 72%, rgba(6,8,7,0.78) 100%),
+        radial-gradient(ellipse 55% 48% at 28% 42%, rgba(217,154,69,0.12), transparent 70%),
+        var(--bg-photo);
+      background-size: cover, cover, cover;
+      background-position: center, 28% 40%, var(--bg-pos);
+      background-repeat: no-repeat;
+      transition: filter 0.35s ease;
     }
     body.listening {
-      background:
-        radial-gradient(ellipse 52% 70% at 50% 37%, rgba(240, 189, 104, 0.45), transparent 68%),
-        repeating-linear-gradient(91deg, transparent 0 44px, rgba(255,255,255,0.012) 45px, transparent 47px 88px),
-        linear-gradient(180deg, #1d1e1d 0%, #181919 57%, #252829 57.2%, #121516 100%);
+      filter: saturate(1.08) brightness(1.05);
+    }
+
+    @media (min-width: 720px) {
+      :root {
+        --bg-photo: url("/assets/desk-bg-wide.webp");
+        --bg-pos: 58% 62%;
+      }
     }
 
     .world {
       min-height: 100dvh;
       height: 100%;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
       position: relative;
-    }
-
-    .world::before {
-      content: "";
-      position: absolute;
-      z-index: 0;
-      left: 50%;
-      top: -10vh;
-      width: min(72vw, 760px);
-      height: 76vh;
-      transform: translateX(-50%);
-      background: linear-gradient(110deg, transparent 8%, rgba(217,154,69,0.035) 32%, rgba(217,154,69,0.13) 51%, rgba(217,154,69,0.035) 70%, transparent 92%);
-      clip-path: polygon(43% 0, 57% 0, 94% 100%, 6% 100%);
-      pointer-events: none;
-    }
-
-    .world::after {
-      content: "";
-      position: absolute;
-      z-index: 0;
-      left: 0;
-      right: 0;
-      top: 57%;
-      height: 1px;
-      background: rgba(233,225,211,0.08);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.28);
-      pointer-events: none;
+      isolation: isolate;
     }
 
     .top {
       z-index: 3;
       display: flex;
-      align-items: baseline;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 1rem;
-      padding: 1.1rem 1.4rem 0.3rem;
+      padding: 1.15rem clamp(1rem, 3vw, 1.75rem) 0.2rem;
       animation: rise 0.6s ease both;
+    }
+
+    .brand-block {
+      max-width: min(52vw, 22rem);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.7);
     }
 
     .brand {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.8rem, 4.6vw, 2.7rem);
+      font-size: clamp(2rem, 5.2vw, 3.15rem);
       font-weight: 700;
       letter-spacing: -0.03em;
-      line-height: 0.95;
+      line-height: 0.92;
       color: var(--paper);
     }
 
     .mode {
-      margin: 0.15rem 0 0;
+      margin: 0.28rem 0 0;
       font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.14em;
@@ -119,11 +109,19 @@
     .phase {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      font-size: 0.82rem;
+      gap: 0.45rem;
+      margin-top: 0.35rem;
+      padding: 0.42rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: var(--ink-soft);
+      color: var(--paper);
       white-space: nowrap;
+      background: rgba(12, 18, 15, 0.42);
+      border: 1px solid rgba(243,235,224,0.12);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
     }
     .phase-dot {
       width: 0.42rem;
@@ -131,53 +129,28 @@
       border-radius: 50%;
       background: var(--ink-faint);
     }
-    .phase-dot.listening { background: var(--duck-deep); }
-    .phase-dot.waiting { background: var(--desk); }
+    .phase-dot.listening { background: var(--lamp-hot); box-shadow: 0 0 10px rgba(240,189,104,0.7); }
+    .phase-dot.waiting { background: var(--ink-faint); }
     .phase-dot.error { background: var(--bad); }
 
-    /* ————— Duck (hand-drawn character) ————— */
+    /* ————— Duck sits on the desk surface ————— */
     .duck-stage {
       z-index: 1;
       min-height: 0;
       display: grid;
-      place-items: center;
-      padding: 0 1rem;
+      place-items: end center;
+      padding: 0 clamp(0.75rem, 3vw, 2rem) 0.25rem;
       position: relative;
     }
 
-    .duck-stage::before {
-      content: "TRACE  /  EXPLAIN  /  NOTICE";
-      position: absolute;
-      left: clamp(1rem, 5vw, 4.5rem);
-      bottom: 12%;
-      color: rgba(233,225,211,0.15);
-      font: 600 0.62rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-      letter-spacing: 0.16em;
-      transform: rotate(-90deg);
-      transform-origin: left bottom;
-    }
-
-    .duck-stage::after {
-      content: "";
-      position: absolute;
-      right: clamp(1rem, 6vw, 5rem);
-      bottom: 8%;
-      width: 112px;
-      height: 44px;
-      opacity: 0.18;
-      transform: rotate(-4deg);
-      background:
-        linear-gradient(rgba(233,225,211,0.55), rgba(233,225,211,0.55)) 8px 10px / 74px 1px no-repeat,
-        linear-gradient(rgba(233,225,211,0.42), rgba(233,225,211,0.42)) 8px 20px / 93px 1px no-repeat,
-        linear-gradient(rgba(233,225,211,0.35), rgba(233,225,211,0.35)) 8px 30px / 58px 1px no-repeat;
-      border: 1px solid rgba(233,225,211,0.24);
-    }
-
     .duck {
-      width: min(78vw, 400px);
+      width: min(58vw, 280px);
       height: auto;
       overflow: visible;
-      filter: drop-shadow(0 22px 26px rgba(0,0,0,0.5));
+      margin-bottom: clamp(0.2rem, 1.5vh, 1rem);
+      margin-right: clamp(0px, 8vw, 5rem);
+      filter: drop-shadow(0 18px 22px rgba(0,0,0,0.55));
+      animation: duck-in 0.85s 0.1s ease both;
     }
 
     .duck * {
@@ -273,20 +246,30 @@
       50% { opacity: 0.9; transform: scaleX(1.06); }
     }
 
-    /* ————— Words ————— */
+    /* ————— Words over the dark desk foreground ————— */
     .words {
       z-index: 2;
-      width: min(100%, 38rem);
+      width: min(100%, 36rem);
       margin: 0 auto;
-      padding: 0 1.25rem 0.4rem;
+      padding: 0.35rem 1.1rem 0.55rem;
       text-align: center;
       animation: rise 0.7s 0.05s ease both;
     }
 
+    .words-panel {
+      padding: 0.85rem 1rem;
+      border-radius: 1rem;
+      background: rgba(10, 14, 12, 0.48);
+      border: 1px solid rgba(243,235,224,0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+    }
+
     .invite {
-      margin: 0 0 0.6rem;
+      margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+      font-size: clamp(1.12rem, 2.3vw, 1.35rem);
       font-weight: 600;
       line-height: 1.35;
       color: var(--ink-soft);
@@ -294,8 +277,8 @@
     .invite.hide { display: none; }
 
     .you-block {
-      margin: 0 0 0.5rem;
-      font-size: clamp(1.05rem, 2.3vw, 1.3rem);
+      margin: 0;
+      font-size: clamp(1.02rem, 2.2vw, 1.22rem);
       font-weight: 600;
       line-height: 1.4;
       color: var(--paper);
@@ -311,44 +294,43 @@
     }
 
     .nudge {
-      margin: 0 auto;
-      max-width: 34rem;
-      font-size: 0.98rem;
+      margin: 0.45rem 0 0;
+      font-size: 0.95rem;
       font-weight: 500;
       line-height: 1.45;
       color: var(--ink-faint);
-      min-height: 1.35em;
+      min-height: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
-    .nudge:empty { min-height: 0; }
+    .nudge:empty { display: none; margin: 0; }
     .nudge.streaming::after {
       content: " ·";
-      color: var(--duck-deep);
+      color: var(--lamp-hot);
       animation: blink 1s steps(1) infinite;
     }
 
-    /* ————— Bottom ————— */
+    /* ————— Bottom controls on shadowed desk edge ————— */
     .bottom {
       z-index: 3;
-      padding: 0.45rem 1rem 1.3rem;
+      padding: 0.35rem 1rem 1.25rem;
       display: grid;
       justify-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
       animation: rise 0.75s 0.08s ease both;
-      background: linear-gradient(180deg, transparent, rgba(8,10,10,0.3));
+      background: linear-gradient(180deg, transparent 0%, rgba(6,8,7,0.35) 35%, rgba(6,8,7,0.62) 100%);
     }
 
     .hold {
       appearance: none;
       border: 0;
       width: min(92vw, 21rem);
-      min-height: 3.55rem;
+      min-height: 3.45rem;
       padding: 0.8rem 1.2rem;
       border-radius: 999px;
-      background: #272c2e;
+      background: rgba(22, 28, 25, 0.82);
       color: var(--paper);
-      border: 1px solid rgba(233,225,211,0.16);
+      border: 1px solid rgba(243,235,224,0.18);
       font: inherit;
       font-size: 1rem;
       font-weight: 700;
@@ -356,7 +338,9 @@
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      box-shadow: 0 10px 26px rgba(29, 36, 40, 0.25);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
     }
     .hold:hover { transform: translateY(-1px); }
@@ -364,16 +348,18 @@
     .hold.armed {
       background: var(--lamp);
       color: var(--ink-dark);
+      border-color: transparent;
       box-shadow:
-        0 0 0 6px rgba(242, 178, 48, 0.3),
-        0 12px 30px rgba(29, 36, 40, 0.2);
+        0 0 0 6px rgba(242, 178, 48, 0.28),
+        0 12px 30px rgba(0, 0, 0, 0.28);
     }
 
     .hold-hint {
       margin: 0;
       font-size: 0.78rem;
       font-weight: 600;
-      color: rgba(242, 236, 224, 0.78);
+      color: rgba(243, 235, 224, 0.72);
+      text-shadow: 0 1px 8px rgba(0,0,0,0.55);
     }
 
     .secondary {
@@ -520,16 +506,36 @@
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes duck-in {
+      from { opacity: 0; transform: translateY(18px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
     @keyframes blink { 50% { opacity: 0; } }
 
     @media (max-width: 640px) {
-      .top { padding: 0.9rem 1rem 0.2rem; }
-      .duck { width: min(86vw, 330px); }
-      .hold { min-height: 3.3rem; }
+      .top { padding: 0.85rem 0.9rem 0.15rem; }
+      .brand { font-size: clamp(1.7rem, 8vw, 2.2rem); }
+      .duck {
+        width: min(52vw, 210px);
+        margin-right: 0;
+      }
+      .words { padding-inline: 0.75rem; }
+      .words-panel { padding: 0.75rem 0.85rem; }
+      .hold { min-height: 3.25rem; }
+      :root { --bg-pos: 70% 42%; }
+    }
+
+    @media (min-width: 900px) {
+      .duck {
+        width: min(32vw, 300px);
+        margin-right: clamp(2rem, 12vw, 9rem);
+      }
+      .words { width: min(100%, 34rem); margin-right: clamp(1rem, 8vw, 6rem); margin-left: auto; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .duck .duck__all { animation: none; }
+      .duck { animation: none; }
       .nudge.streaming::after { animation: none; }
     }
   </style>
@@ -537,7 +543,7 @@
 <body>
   <div class="world">
     <header class="top">
-      <div>
+      <div class="brand-block">
         <h1 class="brand">Rubber Duck</h1>
         <p class="mode">Explain</p>
       </div>
@@ -550,7 +556,7 @@
     <main class="duck-stage" aria-label="Rubber duck">
       <svg class="duck" id="duck" data-state="base" viewBox="0 0 220 200" role="img" aria-label="Rubber duck">
         <g class="duck__all">
-          <ellipse class="duck__shadow" cx="110" cy="176" rx="72" ry="10" fill="rgba(29,36,40,0.14)"/>
+          <ellipse class="duck__shadow" cx="110" cy="176" rx="72" ry="10" fill="rgba(8,12,10,0.45)"/>
           <ellipse class="duck__ripple" cx="110" cy="180" rx="92" ry="12"/>
 
           <g class="duck__wing-l">
@@ -596,9 +602,11 @@
     </main>
 
     <section class="words" aria-live="polite">
-      <p class="invite" id="invite">Explain the code out loud. The duck listens.</p>
-      <p class="you-block" id="youLine"></p>
-      <p class="nudge" id="nudgeLine"></p>
+      <div class="words-panel">
+        <p class="invite" id="invite">Explain the code out loud. The duck listens.</p>
+        <p class="you-block" id="youLine"></p>
+        <p class="nudge" id="nudgeLine"></p>
+      </div>
     </section>
 
     <footer class="bottom">
