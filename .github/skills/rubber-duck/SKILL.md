@@ -23,19 +23,34 @@ Activate when the user mentions rubber-ducking, talking to the duck, explaining 
 - Do **not** silently edit or fix code unless they explicitly ask.
 - Never dump a single giant reply into the UI — stream continuously.
 
-## Setup (once per session)
+## Locate this skill
 
-From the repository root (or this skill directory), start the bridge:
+Before starting, resolve `BRIDGE` to this skill’s `scripts/bridge.mjs` (same folder tree as this `SKILL.md`):
 
 ```bash
-node .github/skills/rubber-duck/scripts/bridge.mjs
+# Prefer the path where this skill is installed, e.g.:
+#   .github/skills/rubber-duck/scripts/bridge.mjs
+#   .agents/skills/rubber-duck/scripts/bridge.mjs
+#   ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
+#   ~/.agents/skills/rubber-duck/scripts/bridge.mjs
+BRIDGE="$(find .github/skills .agents/skills "$HOME/.copilot/skills" "$HOME/.agents/skills" \
+  -path '*/rubber-duck/scripts/bridge.mjs' 2>/dev/null | head -n 1)"
+# Or set BRIDGE to the absolute path of scripts/bridge.mjs next to this SKILL.md.
 ```
 
-The process prints a URL like `http://127.0.0.1:3847/`. Open it in the user's browser (Chrome or Edge recommended for speech recognition). Keep the bridge running for the whole session.
+All commands below use `"$BRIDGE"`. The bridge serves HTML/assets from its own skill directory, so it works no matter which project is open.
+
+## Setup (once per session)
+
+```bash
+node "$BRIDGE"
+```
+
+The process prints a URL like `http://127.0.0.1:3847/`. Open it in the user’s browser (Chrome or Edge recommended for speech recognition). Keep the bridge running for the whole session.
 
 Health check: `curl -s http://127.0.0.1:3847/health`
 
-If port `3847` is busy: `RUBBERDUCK_PORT=3848 node .github/skills/rubber-duck/scripts/bridge.mjs`
+If port `3847` is busy: `RUBBERDUCK_PORT=3848 node "$BRIDGE"`
 
 ## Conversation loop
 
@@ -44,7 +59,7 @@ Repeat until the user ends the session:
 1. **Wait** for the next utterance (blocks until the human speaks or types):
 
    ```bash
-   node .github/skills/rubber-duck/scripts/bridge.mjs wait
+   node "$BRIDGE" wait
    ```
 
    Output is JSON: `{"id":"...","text":"...","ts":...}`.
@@ -52,25 +67,25 @@ Repeat until the user ends the session:
 2. **Signal thinking** so the duck pose updates:
 
    ```bash
-   node .github/skills/rubber-duck/scripts/bridge.mjs say --state thinking
+   node "$BRIDGE" say --state thinking
    ```
 
-3. **Reason** with repo tools (search, read files, git). Stay focused on what they said.
+3. **Reason** with repo tools (search, read files, git) in the **currently open project**. Stay focused on what they said.
 
 4. **Stream** the reply in small chunks (one phrase or sentence at a time):
 
    ```bash
-   node .github/skills/rubber-duck/scripts/bridge.mjs token "First thought…"
-   node .github/skills/rubber-duck/scripts/bridge.mjs token " Follow-up…"
+   node "$BRIDGE" token "First thought…"
+   node "$BRIDGE" token " Follow-up…"
    ```
 
 5. **Finish** the turn (unlocks the mic; optional excited pose on insight):
 
    ```bash
-   node .github/skills/rubber-duck/scripts/bridge.mjs done --state excited
+   node "$BRIDGE" done --state excited
    ```
 
-   Or idle: `node .github/skills/rubber-duck/scripts/bridge.mjs done --state base`
+   Or idle: `node "$BRIDGE" done --state base`
 
 ### HTTP alternative
 
@@ -90,11 +105,11 @@ Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them
 
 ## Duck assets
 
-Replace models anytime (no HTML edits):
+Replace models anytime (no HTML edits) inside this skill’s `assets/` folder:
 
-- `.github/skills/rubber-duck/assets/duck-base.glb`
-- `.github/skills/rubber-duck/assets/duck-thinking.glb`
-- `.github/skills/rubber-duck/assets/duck-excited.glb`
+- `duck-base.glb`
+- `duck-thinking.glb`
+- `duck-excited.glb`
 
 ## Ending
 

@@ -18,6 +18,42 @@ node .github/skills/rubber-duck/scripts/bridge.mjs
 
 Open the printed URL (default `http://127.0.0.1:3847/`) in **Chrome** or **Edge** for speech recognition. Type if the mic is unavailable.
 
+## Test as a skill in another project
+
+**Option A — project skill (best for team / repo-specific test)**
+
+From this repo (or after cloning the PR branch):
+
+```bash
+# in the OTHER project root
+mkdir -p .github/skills
+cp -R /path/to/rubberduck/.github/skills/rubber-duck .github/skills/
+```
+
+Commit or just leave it on disk. Open that other project in your IDE, start a **new** Copilot/Cursor **Agent** chat, then say:
+
+> Start a rubber duck session for this codebase
+
+The agent should load `rubber-duck`, start the bridge, and open the browser. Talk about *that* project's code.
+
+**Option B — personal skill (all projects on your machine)**
+
+```bash
+mkdir -p ~/.copilot/skills ~/.agents/skills
+cp -R /path/to/rubberduck/.github/skills/rubber-duck ~/.copilot/skills/
+cp -R /path/to/rubberduck/.github/skills/rubber-duck ~/.agents/skills/
+```
+
+Restart the IDE or start a fresh agent session, open any repo, then ask to start a rubber duck session.
+
+**Checklist**
+
+1. Node is on your PATH (`node -v`).
+2. Agent mode (not plain inline chat).
+3. Bridge stays running; UI at `http://127.0.0.1:3847/`.
+4. Chrome/Edge for mic; typing always works.
+5. If the skill doesn’t show up: confirm the folder contains `SKILL.md` and restart the agent session.
+
 ## How it fits together
 
 1. The skill (`.github/skills/rubber-duck/SKILL.md`) tells the agent when and how to run a session.
