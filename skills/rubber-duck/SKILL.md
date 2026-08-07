@@ -5,6 +5,10 @@ description: >-
   user wants to rubber-duck, talk to the duck, explain code out loud, walk through
   architecture assumptions, or debug by teaching a rubber duck. Opens a local HTML
   UI with mic input and streams your replies so they can stay out of the IDE.
+license: MIT
+compatibility: Requires Node.js on PATH to run the local localhost bridge.
+metadata:
+  author: shourya0523
 ---
 
 # Rubber Duck Debugging

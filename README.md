@@ -2,58 +2,42 @@
 
 A portable **agent skill** for rubber-duck debugging: your coding agent indexes the repo and reasons; you talk to a duck in the browser while replies stream back live.
 
-Works with **GitHub Copilot**, Cursor, and other agents that support [Agent Skills](https://agentskills.io/).
+Works with **GitHub Copilot**, Cursor, Claude Code, Codex, and other [Agent Skills](https://agentskills.io/) hosts.
 
-## Install (any project)
+## Install
 
-Needs [GitHub CLI](https://cli.github.com/) **2.90+** (`gh --version`).
+Full guide: **[docs/INSTALL.md](docs/INSTALL.md)** (CLI install, preview, pin, publish).
 
-**Everywhere on your machine (recommended):**
+**Fastest (personal, all projects):**
 
 ```bash
+gh skill preview shourya0523/rubberduck rubber-duck   # inspect first
 gh skill install shourya0523/rubberduck rubber-duck --scope user
 ```
 
-**Just this repo (project scope):**
+**From this clone:**
 
 ```bash
-gh skill install shourya0523/rubberduck rubber-duck
+./scripts/install.sh --scope user
+./scripts/install.sh --scope user --agent cursor
+./scripts/install.sh --manual --scope user
 ```
 
-Interactive picker:
+Needs [GitHub CLI](https://cli.github.com/) **2.90+** for `gh skill`, and **Node.js** for the duck bridge.
 
-```bash
-gh skill install shourya0523/rubberduck
-```
-
-Update later:
-
-```bash
-gh skill update rubber-duck
-```
-
-Then reload VS Code / start a **new** Copilot **Agent** chat.
-
-> Until this lands on `main`, install from the skill branch:
-> `gh skill install shourya0523/rubberduck rubber-duck --scope user --pin local/webp-duck-states-9464`
-
-Also install **Node.js** (`node -v`) — the duck UI bridge needs it.
+Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
 
 ## Trigger
 
-1. Open any project in VS Code  
-2. Copilot Chat → **Agent** mode  
-3. Say: **Start a rubber duck session**  
-4. Open the URL the agent prints (usually `http://127.0.0.1:3847/`) in Chrome or Edge  
-5. Talk or type to the duck  
-
-Slash-style also works in some hosts: `/rubber-duck`
+1. Reload IDE → Copilot/Cursor **Agent** chat  
+2. Say: **Start a rubber duck session**  
+3. Open `http://127.0.0.1:3847/` in Chrome or Edge  
+4. Talk or type to the duck  
 
 ## Manual run (no agent)
 
 ```bash
 node skills/rubber-duck/scripts/bridge.mjs
-# or wherever gh installed it, e.g. ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
 ```
 
 ## How it fits together
@@ -71,10 +55,10 @@ agent → POST /stream (tokens) → SSE → HTML (live)
 
 ```bash
 BRIDGE=~/.copilot/skills/rubber-duck/scripts/bridge.mjs   # after --scope user
-# or: BRIDGE=skills/rubber-duck/scripts/bridge.mjs  # in this repo
+# or: BRIDGE=skills/rubber-duck/scripts/bridge.mjs
 
-node "$BRIDGE"                 # terminal A — keep running
-node "$BRIDGE" wait            # agent loop
+node "$BRIDGE"
+node "$BRIDGE" wait
 node "$BRIDGE" say --state thinking
 node "$BRIDGE" token "What happens if that map is empty?"
 node "$BRIDGE" done --state excited
@@ -84,36 +68,23 @@ Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3
 
 ## Duck animation
 
-State loops are animated WebPs (split from `assets/source/duck-anim.webp`):
-
-- `assets/duck-base.webp`
-- `assets/duck-thinking.webp`
-- `assets/duck-excited.webp`
-
-Re-split after replacing the source film:
-
-```bash
-pip install Pillow   # once
-node skills/rubber-duck/scripts/split-duck-webps.mjs
-```
+State loops: `assets/duck-{base,thinking,excited}.webp`  
+Re-split: `node skills/rubber-duck/scripts/split-duck-webps.mjs` (needs Pillow)
 
 ## Layout
 
 ```text
-skills/rubber-duck/           # canonical (gh skill install)
-  SKILL.md
-  scripts/bridge.mjs
-  scripts/split-duck-webps.mjs
-  app/index.html
-  assets/duck-*.webp
-  assets/source/duck-anim.webp
-.github/skills/rubber-duck -> ../../skills/rubber-duck
+skills/rubber-duck/              # canonical (gh skill install + publish)
+scripts/install.sh               # multi-pathway installer
+docs/INSTALL.md                  # install + publish guide
+.github/skills/rubber-duck → …   # Copilot project discovery when cloning this repo
+LICENSE
 ```
+
+Do not commit `.agents/skills` / `.claude/skills` — those are **install destinations**, not sources.
 
 ## Hard constraints (v1)
 
-- Speech recognition in the HTML (Chrome/Edge).
-- Streaming agent replies over SSE (no waiting for a full blob).
-- No runtime CDN — local WebP loops only.
-
-Reach goals (stubbed / ignored for now): diagram events, duck TTS.
+- Speech recognition in the HTML (Chrome/Edge)
+- Streaming agent replies over SSE
+- No runtime CDN — local WebP loops only
