@@ -2,21 +2,29 @@
 
 Voice-first rubber-duck debugging for GitHub Copilot and other coding agents.
 
-## Install
+## Install pathways
+
+See **[docs/INSTALL.md](../../docs/INSTALL.md)** for the full matrix.
 
 ```bash
-# all projects (personal / user scope)
+# A — gh CLI (personal)
 gh skill install shourya0523/rubberduck rubber-duck --scope user
 
-# current repo only
-gh skill install shourya0523/rubberduck rubber-duck
+# B — installer from this repo
+../../scripts/install.sh --scope user
+../../scripts/install.sh --scope user --agent cursor
+../../scripts/install.sh --manual --scope user
+
+# C — manual copy
+cp -R . ~/.copilot/skills/rubber-duck
+cp -R . ~/.agents/skills/rubber-duck
 ```
 
-Requires [GitHub CLI](https://cli.github.com/) 2.90+ and Node.js.
+Requires Node.js. Prefer Chrome/Edge for the mic.
 
-Then open any project → Copilot **Agent** chat → **Start a rubber duck session**.
+Then: Agent chat → **Start a rubber duck session**.
 
-## Manual
+## Manual bridge
 
 ```bash
 node scripts/bridge.mjs
