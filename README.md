@@ -1,62 +1,80 @@
 # Rubber Duck
 
-A portable **agent skill** for rubber-duck debugging: your coding agent indexes the repo and reasons; you talk to a duck in the browser while replies stream back live.
+A portable **agent skill** that turns rubber-duck debugging into a voice session with your coding agent: you talk to a duck in the browser; the agent keeps the codebase in context and streams answers back live.
 
 Works with **GitHub Copilot**, Cursor, Claude Code, Codex, and other [Agent Skills](https://agentskills.io/) hosts.
 
+## Why rubber ducks?
+
+**Rubber duck debugging** is the practice of explaining your code, out loud, to an inanimate object — classically a rubber duck — until the bug or bad assumption surfaces. It comes from *The Pragmatic Programmer* (Andrew Hunt & David Thomas, 1999): a developer kept a rubber duck on their desk and walked through code line by line, narrating to the duck. Saying the logic aloud forces you to fill gaps you’d skip when “explaining” only inside your head.
+
+The duck doesn’t know anything. That’s the point. **You** do the understanding; the duck is a patient listener.
+
+## What this skill adds
+
+Classic rubber-ducking is powerful but lonely: no one pushes back when your story is inconsistent, and you stay glued to the IDE. This skill keeps the duck ritual and adds an agent that actually knows the repo.
+
+| Classic duck | This skill |
+|--------------|------------|
+| You narrate; silence answers | You narrate; the agent asks Socratic questions with codebase context |
+| Stuck in the editor | Browser duck UI — talk with your voice, watch the duck react |
+| Easy to skip “saying it out loud” | Mic-first loop makes explanation the main action |
+| No shared memory of the session | Streamed replies + optional conversation log |
+
+**Value in practice**
+
+- **Surface the real bug** by forcing a clear explanation before (or instead of) jumping to a fix.
+- **Test architecture assumptions** by walking a design out loud while the agent checks the tree.
+- **Stay out of chat-pane thrash** — the duck page is a single composition: duck, caption, Talk.
+- **Keep agency with you** — the skill is Socratic by design; it shouldn’t silently rewrite your code unless you ask.
+
 ## Install
 
-Full guide: **[docs/INSTALL.md](docs/INSTALL.md)** (CLI install, preview, pin, publish).
+- **Humans:** [docs/INSTALL.md](docs/INSTALL.md)
+- **Coding agents / LLMs installing for a user:** [docs/INSTALL-FOR-LLMS.md](docs/INSTALL-FOR-LLMS.md)
 
-**Fastest (personal, all projects):**
+**Fastest (personal, all projects)** — needs GitHub CLI **2.90+**:
 
 ```bash
-gh skill preview shourya0523/rubberduck rubber-duck   # inspect first
-gh skill install shourya0523/rubberduck rubber-duck --scope user
+gh skill install shourya0523/rubberduck rubber-duck --scope user --pin v0.1.0
 ```
 
-**From this clone:**
+If you see `unknown command "skill" for "gh"`:
 
 ```bash
-./scripts/install.sh --scope user
-./scripts/install.sh --scope user --agent cursor
+brew upgrade gh && gh --version   # need >= 2.90
+```
+
+Or skip `gh skill` entirely:
+
+```bash
 ./scripts/install.sh --manual --scope user
 ```
 
-Needs [GitHub CLI](https://cli.github.com/) **2.90+** (`gh skill` was added in 2.90). If `gh skill` is unknown:
-
-```bash
-brew upgrade gh && gh --version
-```
-
-Or skip `gh` and use `./scripts/install.sh --manual --scope user` / the manual copy steps in [docs/INSTALL.md](docs/INSTALL.md).
-
-Also needs **Node.js** for the duck bridge.
-
-Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
+Also needs **Node.js** for the local duck bridge.
 
 ## Trigger
 
-1. Reload IDE → Copilot/Cursor **Agent** chat  
-2. Say: **Start a rubber duck session**  
-3. Open `http://127.0.0.1:3847/` in Chrome or Edge  
-4. Talk or type to the duck  
+1. Reload the IDE → open **Agent** chat (Copilot / Cursor / etc.)
+2. Say: **Start a rubber duck session**
+3. Open `http://127.0.0.1:3847/` in Chrome or Edge
+4. Talk (or type) to the duck
+
+## How it fits together
+
+1. [`skills/rubber-duck/SKILL.md`](skills/rubber-duck/SKILL.md) tells the agent when and how to run a session.
+2. `scripts/bridge.mjs` serves the duck UI on localhost and relays messages over SSE.
+3. You speak; the agent waits, reasons with repo tools, and streams tokens back to the page.
+
+```text
+You (mic) → HTML → POST /utterance → agent waits
+agent → POST /stream (tokens) → SSE → HTML (live)
+```
 
 ## Manual run (no agent)
 
 ```bash
 node skills/rubber-duck/scripts/bridge.mjs
-```
-
-## How it fits together
-
-1. The skill (`skills/rubber-duck/SKILL.md`) tells the agent when and how to run a session.
-2. `scripts/bridge.mjs` serves the UI on localhost and relays messages over SSE.
-3. You speak (Web Speech API) or type; the agent waits on `bridge.mjs wait`, thinks with repo tools, then streams tokens with `bridge.mjs token` / `done`.
-
-```text
-You (mic) → HTML → POST /utterance → agent waits
-agent → POST /stream (tokens) → SSE → HTML (live)
 ```
 
 ## Agent CLI cheatsheet
@@ -72,27 +90,20 @@ node "$BRIDGE" token "What happens if that map is empty?"
 node "$BRIDGE" done --state excited
 ```
 
-Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`).
-
-## Duck animation
-
-State loops: `assets/duck-{base,thinking,excited}.webp`  
-Re-split: `node skills/rubber-duck/scripts/split-duck-webps.mjs` (needs Pillow)
-
 ## Layout
 
 ```text
-skills/rubber-duck/              # canonical (gh skill install + publish)
-scripts/install.sh               # multi-pathway installer
-docs/INSTALL.md                  # install + publish guide
-.github/skills/rubber-duck → …   # Copilot project discovery when cloning this repo
+skills/rubber-duck/           # canonical skill (gh skill install + publish)
+scripts/install.sh
+docs/INSTALL.md               # human install
+docs/INSTALL-FOR-LLMS.md      # agent/LLM install playbook
+.github/skills/rubber-duck → skills/rubber-duck
 LICENSE
 ```
 
-Do not commit `.agents/skills` / `.claude/skills` — those are **install destinations**, not sources.
+## Maintainers
 
-## Hard constraints (v1)
-
-- Speech recognition in the HTML (Chrome/Edge)
-- Streaming agent replies over SSE
-- No runtime CDN — local WebP loops only
+```bash
+gh skill publish --dry-run
+gh skill publish --tag v0.1.0
+```

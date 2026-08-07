@@ -19,6 +19,8 @@ gh --version          # confirm >= 2.90
 
 No upgrade yet? Use **manual copy** or `./scripts/install.sh --manual` below — those do not need `gh skill`.
 
+**Coding agents installing on behalf of a user:** follow **[INSTALL-FOR-LLMS.md](INSTALL-FOR-LLMS.md)** (ordered strategies + verify + session start).
+
 ---
 
 ## Recommended — GitHub CLI
