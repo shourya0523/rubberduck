@@ -29,7 +29,7 @@
       --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
       --bg-photo: url("/assets/desk-bg.webp");
       --bg-pos: 78% 36%;
-      --lamp-col: minmax(9.5rem, 38%);
+      --lamp-col: minmax(10rem, 42%);
       --stream-max: min(30vh, 11.5rem);
     }
 
@@ -64,7 +64,7 @@
       :root {
         --bg-photo: url("/assets/desk-bg-wide.webp");
         --bg-pos: 62% 58%;
-        --lamp-col: minmax(14rem, 40%);
+        --lamp-col: minmax(15rem, 44%);
         --stream-max: min(28vh, 13rem);
       }
     }
@@ -168,25 +168,25 @@
       z-index: 1;
       min-height: 0;
       display: grid;
-      place-items: center center;
-      padding: 0.25rem 0.75rem 0.15rem 0.2rem;
+      place-items: center end;
+      padding: 0.15rem clamp(0.6rem, 2vw, 1.4rem) 0.1rem 0;
       position: relative;
     }
 
     .duck {
-      width: min(100%, 52vw, 440px);
-      max-height: min(52vh, 460px);
+      width: min(96%, 560px);
+      max-height: min(62vh, 560px);
       height: auto;
       overflow: visible;
-      justify-self: center;
-      filter: drop-shadow(0 22px 28px rgba(0,0,0,0.55));
+      justify-self: end;
+      filter: drop-shadow(0 24px 30px rgba(0,0,0,0.58));
       animation: duck-in 0.85s 0.1s ease both;
       transition: width 0.35s ease, max-height 0.35s ease;
     }
-    /* While a long reply streams, keep duck readable but leave room for the panel */
+    /* While a long reply streams, ease duck down slightly so the panel can grow */
     body.is-streaming .duck {
-      width: min(100%, 44vw, 360px);
-      max-height: min(42vh, 380px);
+      width: min(88%, 460px);
+      max-height: min(50vh, 460px);
     }
 
     .duck * {
@@ -565,35 +565,35 @@
 
     @media (max-width: 720px) {
       .world {
-        grid-template-columns: minmax(4.5rem, 28%) minmax(0, 1fr);
+        grid-template-columns: minmax(3.75rem, 24%) minmax(0, 1fr);
         --stream-max: min(26vh, 9.5rem);
       }
       .top { padding: 0.85rem 0.85rem 0.1rem 0.15rem; }
       .brand { font-size: clamp(1.65rem, 7.5vw, 2.15rem); }
       .duck {
-        width: min(100%, 62vw, 300px);
-        max-height: min(40vh, 300px);
+        width: min(98%, 340px);
+        max-height: min(46vh, 340px);
       }
       body.is-streaming .duck {
-        width: min(100%, 50vw, 240px);
-        max-height: min(32vh, 240px);
+        width: min(90%, 270px);
+        max-height: min(36vh, 270px);
       }
-      .words { padding-inline: 0.65rem 0.75rem; }
+      .words { padding-inline: 0.55rem 0.7rem; }
       .words-panel { padding: 0.7rem 0.8rem; }
       .hold { min-height: 3.25rem; }
-      :root { --bg-pos: 82% 40%; }
+      :root { --bg-pos: 86% 40%; }
     }
 
     @media (min-width: 1100px) {
       .duck {
-        width: min(100%, 38vw, 480px);
-        max-height: min(56vh, 500px);
+        width: min(94%, 580px);
+        max-height: min(64vh, 580px);
       }
       body.is-streaming .duck {
-        width: min(100%, 32vw, 400px);
-        max-height: min(46vh, 420px);
+        width: min(86%, 480px);
+        max-height: min(52vh, 480px);
       }
-      .words { max-width: 38rem; }
+      .words { max-width: 40rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
