@@ -6,27 +6,26 @@ Works with **GitHub Copilot**, Cursor, Claude Code, Codex, and other [Agent Skil
 
 ## Install
 
-Full guide: **[docs/INSTALL.md](docs/INSTALL.md)** (four pathways).
+Full guide: **[docs/INSTALL.md](docs/INSTALL.md)** (CLI install, preview, pin, publish).
 
 **Fastest (personal, all projects):**
 
 ```bash
+gh skill preview shourya0523/rubberduck rubber-duck   # inspect first
 gh skill install shourya0523/rubberduck rubber-duck --scope user
 ```
 
-**From this clone (script):**
+**From this clone:**
 
 ```bash
-./scripts/install.sh --scope user                 # Copilot, everywhere
-./scripts/install.sh --scope project              # this repo only
-./scripts/install.sh --scope user --agent cursor  # Cursor
-./scripts/install.sh --manual --scope user        # no gh CLI
+./scripts/install.sh --scope user
+./scripts/install.sh --scope user --agent cursor
+./scripts/install.sh --manual --scope user
 ```
 
-Needs [GitHub CLI](https://cli.github.com/) **2.90+** for `gh skill` pathways, and **Node.js** for the duck bridge.
+Needs [GitHub CLI](https://cli.github.com/) **2.90+** for `gh skill`, and **Node.js** for the duck bridge.
 
-> Until merged to `main`, pin the branch:
-> `gh skill install shourya0523/rubberduck rubber-duck --scope user --pin local/webp-duck-states-9464`
+Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
 
 ## Trigger
 
@@ -75,13 +74,14 @@ Re-split: `node skills/rubber-duck/scripts/split-duck-webps.mjs` (needs Pillow)
 ## Layout
 
 ```text
-skills/rubber-duck/              # canonical skill (gh skill install)
+skills/rubber-duck/              # canonical (gh skill install + publish)
 scripts/install.sh               # multi-pathway installer
-docs/INSTALL.md                  # install pathways
-.github/skills/rubber-duck → …   # Copilot project discovery
-.agents/skills/rubber-duck → …   # shared agent discovery
-.claude/skills/rubber-duck → …   # Claude Code discovery
+docs/INSTALL.md                  # install + publish guide
+.github/skills/rubber-duck → …   # Copilot project discovery when cloning this repo
+LICENSE
 ```
+
+Do not commit `.agents/skills` / `.claude/skills` — those are **install destinations**, not sources.
 
 ## Hard constraints (v1)
 

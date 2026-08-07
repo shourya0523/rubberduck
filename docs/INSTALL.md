@@ -1,29 +1,37 @@
 # Install Rubber Duck
 
-Pick a pathway. All of them need **Node.js** (`node -v`) for the duck bridge. Chrome or Edge is best for the mic.
+Official tooling: [`gh skill`](https://cli.github.com/manual/gh_skill) (GitHub CLI **2.90+**) and the [Agent Skills](https://agentskills.io/specification) layout (`skills/*/SKILL.md`).
 
-After any install: reload the IDE → **Agent** chat → **Start a rubber duck session**.
+Requires **Node.js** (`node -v`) for the duck bridge. Prefer Chrome/Edge for the mic.
+
+After install: reload the IDE → **Agent** chat → **Start a rubber duck session**.
 
 ---
 
-## Pathway A — GitHub CLI (recommended)
+## Recommended — GitHub CLI
 
-Needs [GitHub CLI](https://cli.github.com/) **2.90+**.
+### Search / preview (safe first)
 
-### A1. Personal skill (every project on this machine)
+```bash
+gh skill search rubber-duck
+gh skill preview shourya0523/rubberduck rubber-duck
+```
+
+### Install (personal — every project)
 
 ```bash
 gh skill install shourya0523/rubberduck rubber-duck --scope user
 ```
 
-### A2. Project skill (this repo only)
+### Install (this project only)
 
 ```bash
-cd your-project
 gh skill install shourya0523/rubberduck rubber-duck --scope project
 ```
 
-### A3. Another agent host (Cursor, Claude Code, …)
+Default without `--scope` is **project**. Prefer `--scope user` for “works in any repo.”
+
+### Other agent hosts
 
 ```bash
 gh skill install shourya0523/rubberduck rubber-duck --scope user --agent cursor
@@ -31,13 +39,15 @@ gh skill install shourya0523/rubberduck rubber-duck --scope user --agent claude-
 gh skill install shourya0523/rubberduck rubber-duck --scope user --agent codex
 ```
 
-### A4. Pin a branch / tag / commit
+### Pin a release / commit
 
 ```bash
-gh skill install shourya0523/rubberduck rubber-duck --scope user --pin local/webp-duck-states-9464
+gh skill install shourya0523/rubberduck rubber-duck --scope user --pin v0.1.0
+# or
+gh skill install shourya0523/rubberduck rubber-duck@v0.1.0 --scope user
 ```
 
-### A5. From a local clone
+### From a local clone
 
 ```bash
 git clone https://github.com/shourya0523/rubberduck.git
@@ -45,103 +55,80 @@ cd rubberduck
 gh skill install . rubber-duck --from-local --scope user
 ```
 
-Update later: `gh skill update rubber-duck`
+### Update
+
+```bash
+gh skill update rubber-duck
+gh skill update --all
+```
 
 ---
 
-## Pathway B — Installer script (this repo)
-
-From a clone of this repository:
+## Installer script (this repo)
 
 ```bash
-git clone https://github.com/shourya0523/rubberduck.git
-cd rubberduck
-chmod +x scripts/install.sh
-
-# personal Copilot skill
 ./scripts/install.sh --scope user
-
-# this git repo only
-./scripts/install.sh --scope project
-
-# Cursor, user-wide
 ./scripts/install.sh --scope user --agent cursor
-
-# no gh CLI — plain file copy
-./scripts/install.sh --manual --scope user
-
-# install from GitHub instead of local files
+./scripts/install.sh --manual --scope user          # no gh
 ./scripts/install.sh --from-github --scope user
 ```
 
 ---
 
-## Pathway C — Manual copy (no `gh`)
-
-### C1. Personal (all projects)
+## Manual copy (no `gh`)
 
 ```bash
 git clone https://github.com/shourya0523/rubberduck.git /tmp/rubberduck
 mkdir -p ~/.copilot/skills ~/.agents/skills
-
 cp -R /tmp/rubberduck/skills/rubber-duck ~/.copilot/skills/
 cp -R /tmp/rubberduck/skills/rubber-duck ~/.agents/skills/
 ```
 
-Cursor-only personal path (also useful):
+Into another project:
 
 ```bash
-mkdir -p ~/.cursor/skills
-cp -R /tmp/rubberduck/skills/rubber-duck ~/.cursor/skills/
-```
-
-### C2. Into another project (team / repo-local)
-
-```bash
-# from the other project's root
-mkdir -p .agents/skills .github/skills
+mkdir -p .agents/skills
 cp -R /path/to/rubberduck/skills/rubber-duck .agents/skills/
-ln -sfn ../.agents/skills/rubber-duck .github/skills/rubber-duck
 ```
-
-Or copy into `.github/skills/rubber-duck` directly if you prefer Copilot’s classic layout.
 
 ---
 
-## Pathway D — Use in-place (developers of this repo)
-
-No install. From this checkout:
+## In-place (this checkout)
 
 ```bash
 node skills/rubber-duck/scripts/bridge.mjs
 ```
 
-Open `http://127.0.0.1:3847/`. In Agent chat, ask to rubber-duck using the skill already present under `skills/` / `.github/skills/`.
+Skill is already at `skills/rubber-duck/` (and `.github/skills/rubber-duck` for Copilot project discovery).
 
 ---
 
-## Where files land
+## Where installs land
 
-| Pathway | Typical location |
-|---------|------------------|
-| `gh` / installer, Copilot, `--scope user` | `~/.copilot/skills/rubber-duck` |
-| `gh` / installer, `--scope project` | `.agents/skills/rubber-duck` (shared by several hosts) |
-| Manual Cursor personal | `~/.cursor/skills/rubber-duck` |
+| Scope / host | Location |
+|--------------|----------|
+| Copilot, `--scope user` | `~/.copilot/skills/rubber-duck` |
+| Several hosts, `--scope project` | `.agents/skills/rubber-duck` |
+| Cursor personal | `~/.cursor/skills/…` (via `--agent cursor`) |
 | Manual broad discovery | `~/.agents/skills/rubber-duck` |
-| This repository (vendored) | `skills/rubber-duck` (+ `.github/skills` symlink) |
+
+Do **not** commit `.agents/skills` or `.claude/skills` install dumps into a skills *source* repo — those folders are destinations for `gh skill install`. This repo publishes from `skills/rubber-duck/` only.
 
 ---
 
-## Verify
+## Maintainers — publish for install
 
-```bash
-# if you used gh
-gh skill list 2>/dev/null || true
+Layout required by `gh skill`:
 
-# bridge smoke test (path may vary)
-node ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
-# or
-node skills/rubber-duck/scripts/bridge.mjs
+```text
+skills/rubber-duck/SKILL.md   # name must match directory
 ```
 
-Health: `curl -s http://127.0.0.1:3847/health`
+Validate, then cut a release:
+
+```bash
+gh skill publish --dry-run
+gh skill publish --tag v0.1.0
+```
+
+`gh skill publish` validates against [agentskills.io](https://agentskills.io/specification), can add the `agent-skills` topic, and creates a GitHub release so users can `--pin v0.1.0`.

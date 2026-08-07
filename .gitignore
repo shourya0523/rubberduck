@@ -1,0 +1,9 @@
+# Ignore agent install destinations (not skill sources).
+# Canonical publishable skills live under skills/*/SKILL.md only.
+.agents/
+.claude/
+
+# Local bridge / OS noise
+.DS_Store
+*.log
+node_modules/
