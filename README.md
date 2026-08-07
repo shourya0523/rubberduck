@@ -52,13 +52,13 @@ Slash-style also works in some hosts: `/rubber-duck`
 ## Manual run (no agent)
 
 ```bash
-node .github/skills/rubber-duck/scripts/bridge.mjs
+node skills/rubber-duck/scripts/bridge.mjs
 # or wherever gh installed it, e.g. ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
 ```
 
 ## How it fits together
 
-1. The skill (`.github/skills/rubber-duck/SKILL.md`) tells the agent when and how to run a session.
+1. The skill (`skills/rubber-duck/SKILL.md`) tells the agent when and how to run a session.
 2. `scripts/bridge.mjs` serves the UI on localhost and relays messages over SSE.
 3. You speak (Web Speech API) or type; the agent waits on `bridge.mjs wait`, thinks with repo tools, then streams tokens with `bridge.mjs token` / `done`.
 
@@ -71,7 +71,7 @@ agent → POST /stream (tokens) → SSE → HTML (live)
 
 ```bash
 BRIDGE=~/.copilot/skills/rubber-duck/scripts/bridge.mjs   # after --scope user
-# or: BRIDGE=.github/skills/rubber-duck/scripts/bridge.mjs  # in this repo
+# or: BRIDGE=skills/rubber-duck/scripts/bridge.mjs  # in this repo
 
 node "$BRIDGE"                 # terminal A — keep running
 node "$BRIDGE" wait            # agent loop
@@ -94,20 +94,20 @@ Re-split after replacing the source film:
 
 ```bash
 pip install Pillow   # once
-node .github/skills/rubber-duck/scripts/split-duck-webps.mjs
+node skills/rubber-duck/scripts/split-duck-webps.mjs
 ```
 
 ## Layout
 
 ```text
-.github/skills/rubber-duck/   # Copilot project skill
+skills/rubber-duck/           # canonical (gh skill install)
   SKILL.md
   scripts/bridge.mjs
   scripts/split-duck-webps.mjs
   app/index.html
   assets/duck-*.webp
   assets/source/duck-anim.webp
-skills/rubber-duck -> ../.github/skills/rubber-duck   # gh skill install discovery
+.github/skills/rubber-duck -> ../../skills/rubber-duck
 ```
 
 ## Hard constraints (v1)
