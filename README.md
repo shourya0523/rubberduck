@@ -1,22 +1,60 @@
 # Rubber Duck
 
-A portable **agent skill** for rubber-duck debugging: your coding agent indexes the repo and reasons; you talk to a 3D duck in the browser while replies stream back live.
+A portable **agent skill** for rubber-duck debugging: your coding agent indexes the repo and reasons; you talk to a duck in the browser while replies stream back live.
 
-Works with **GitHub Copilot** (and other agents that load Agent Skills from `.github/skills/`).
+Works with **GitHub Copilot**, Cursor, and other agents that support [Agent Skills](https://agentskills.io/).
 
-## Quick start
+## Install (any project)
 
-Ask your agent:
+Needs [GitHub CLI](https://cli.github.com/) **2.90+** (`gh --version`).
 
-> Open a rubber duck session for this repo.
+**Everywhere on your machine (recommended):**
 
-Or start the bridge yourself:
+```bash
+gh skill install shourya0523/rubberduck rubber-duck --scope user
+```
+
+**Just this repo (project scope):**
+
+```bash
+gh skill install shourya0523/rubberduck rubber-duck
+```
+
+Interactive picker:
+
+```bash
+gh skill install shourya0523/rubberduck
+```
+
+Update later:
+
+```bash
+gh skill update rubber-duck
+```
+
+Then reload VS Code / start a **new** Copilot **Agent** chat.
+
+> Until this lands on `main`, install from the skill branch:
+> `gh skill install shourya0523/rubberduck rubber-duck --scope user --pin local/webp-duck-states-9464`
+
+Also install **Node.js** (`node -v`) — the duck UI bridge needs it.
+
+## Trigger
+
+1. Open any project in VS Code  
+2. Copilot Chat → **Agent** mode  
+3. Say: **Start a rubber duck session**  
+4. Open the URL the agent prints (usually `http://127.0.0.1:3847/`) in Chrome or Edge  
+5. Talk or type to the duck  
+
+Slash-style also works in some hosts: `/rubber-duck`
+
+## Manual run (no agent)
 
 ```bash
 node .github/skills/rubber-duck/scripts/bridge.mjs
+# or wherever gh installed it, e.g. ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
 ```
-
-Open the printed URL (default `http://127.0.0.1:3847/`) in **Chrome** or **Edge** for speech recognition. Type if the mic is unavailable.
 
 ## How it fits together
 
@@ -32,48 +70,50 @@ agent → POST /stream (tokens) → SSE → HTML (live)
 ## Agent CLI cheatsheet
 
 ```bash
-# terminal A — keep running
-node .github/skills/rubber-duck/scripts/bridge.mjs
+BRIDGE=~/.copilot/skills/rubber-duck/scripts/bridge.mjs   # after --scope user
+# or: BRIDGE=.github/skills/rubber-duck/scripts/bridge.mjs  # in this repo
 
-# terminal B — agent loop
-node .github/skills/rubber-duck/scripts/bridge.mjs wait
-node .github/skills/rubber-duck/scripts/bridge.mjs say --state thinking
-node .github/skills/rubber-duck/scripts/bridge.mjs token "What happens if that map is empty?"
-node .github/skills/rubber-duck/scripts/bridge.mjs done --state excited
+node "$BRIDGE"                 # terminal A — keep running
+node "$BRIDGE" wait            # agent loop
+node "$BRIDGE" say --state thinking
+node "$BRIDGE" token "What happens if that map is empty?"
+node "$BRIDGE" done --state excited
 ```
 
 Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`).
 
-## Duck models
+## Duck animation
 
-Drop your own GLBs over these paths (same names):
+State loops are animated WebPs (split from `assets/source/duck-anim.webp`):
 
-- `.github/skills/rubber-duck/assets/duck-base.glb`
-- `.github/skills/rubber-duck/assets/duck-thinking.glb`
-- `.github/skills/rubber-duck/assets/duck-excited.glb`
+- `assets/duck-base.webp`
+- `assets/duck-thinking.webp`
+- `assets/duck-excited.webp`
 
-Placeholder ducks ship so the skill works before you upload finals. Regenerate placeholders with:
+Re-split after replacing the source film:
 
 ```bash
-node .github/skills/rubber-duck/scripts/make-placeholder-glbs.mjs
+pip install Pillow   # once
+node .github/skills/rubber-duck/scripts/split-duck-webps.mjs
 ```
 
 ## Layout
 
 ```text
-.github/skills/rubber-duck/
+.github/skills/rubber-duck/   # Copilot project skill
   SKILL.md
   scripts/bridge.mjs
-  scripts/make-placeholder-glbs.mjs
+  scripts/split-duck-webps.mjs
   app/index.html
-  assets/duck-*.glb
-  assets/vendor/          # three.js (no CDN at runtime)
+  assets/duck-*.webp
+  assets/source/duck-anim.webp
+skills/rubber-duck -> ../.github/skills/rubber-duck   # gh skill install discovery
 ```
 
 ## Hard constraints (v1)
 
 - Speech recognition in the HTML (Chrome/Edge).
 - Streaming agent replies over SSE (no waiting for a full blob).
-- No runtime CDN / npm install for the UI — vendored Three.js + local GLBs.
+- No runtime CDN — local WebP loops only.
 
 Reach goals (stubbed / ignored for now): diagram events, duck TTS.

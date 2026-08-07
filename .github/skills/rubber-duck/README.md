@@ -1,21 +1,34 @@
 # rubber-duck skill
 
-Agent skill for rubber-duck debugging sessions. See the repository [README](../../../README.md) for full docs.
+Voice-first rubber-duck debugging for GitHub Copilot and other coding agents.
 
-## Invoke
+## Install
 
-Ask Copilot (or another coding agent):
+```bash
+# all projects (personal / user scope)
+gh skill install shourya0523/rubberduck rubber-duck --scope user
 
-> Start a rubber duck session
+# current repo only
+gh skill install shourya0523/rubberduck rubber-duck
+```
 
-Or run:
+Requires [GitHub CLI](https://cli.github.com/) 2.90+ and Node.js.
+
+Then open any project → Copilot **Agent** chat → **Start a rubber duck session**.
+
+## Manual
 
 ```bash
 node scripts/bridge.mjs
 ```
 
-Then open `http://127.0.0.1:3847/`.
+Open `http://127.0.0.1:3847/`.
 
-## Replace models
+## Replace duck animation
 
-Overwrite `assets/duck-base.glb`, `assets/duck-thinking.glb`, and `assets/duck-excited.glb`.
+Overwrite `assets/source/duck-anim.webp`, then:
+
+```bash
+pip install Pillow
+node scripts/split-duck-webps.mjs
+```
