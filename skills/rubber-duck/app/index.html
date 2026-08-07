@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rubber Duck</title>
+  <style>
+    :root {
+      --ink: #142428;
+      --foam: #f4fafb;
+      --duck: #f0c43a;
+      --duck-deep: #d9a01c;
+      --sea-1: #1c5c68;
+      --sea-2: #0f3a44;
+      --glass: rgba(15, 40, 48, 0.42);
+      --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: var(--font-body);
+      color: var(--foam);
+      background: var(--sea-2);
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 42%, rgba(255, 220, 120, 0.18), transparent 60%),
+        radial-gradient(ellipse 90% 70% at 50% 100%, rgba(20, 70, 80, 0.9), transparent 55%),
+        linear-gradient(180deg, #2a7a88 0%, var(--sea-1) 45%, var(--sea-2) 100%);
+    }
+
+    .world {
+      position: relative;
+      min-height: 100dvh;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* —— Brand strip: thin, doesn't steal the duck —— */
+    .top {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.35rem 0.4rem;
+      animation: rise 0.7s ease both;
+    }
+
+    .brand {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 5.5vw, 3.25rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 0.92;
+      text-shadow: 0 2px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.86rem;
+      font-weight: 600;
+      opacity: 0.92;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--duck);
+      animation: pulse 1.8s ease-out infinite;
+    }
+    .dot.thinking { background: #8fd4e0; animation-duration: 0.9s; }
+    .dot.listening { background: #6fdb9a; }
+    .dot.error { background: #ff8e8e; animation: none; }
+
+    /* —— Duck owns the middle —— */
+    .duck-stage {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .duck-stage img {
+      position: absolute;
+      width: min(96vw, 1100px);
+      height: min(72dvh, 720px);
+      object-fit: contain;
+      filter: drop-shadow(0 28px 48px rgba(0, 0, 0, 0.35));
+      opacity: 0;
+      transform: scale(0.97);
+      transition: opacity 0.45s ease, transform 0.55s ease;
+      pointer-events: none;
+    }
+
+    .duck-stage img.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: floaty 3.4s ease-in-out infinite;
+    }
+    .duck-stage.thinking img.active { animation: softTip 2.8s ease-in-out infinite; }
+    .duck-stage.excited img.active { animation: hop 0.8s ease-in-out infinite; }
+
+    /* —— Bottom: caption + talk (not a chat panel over the duck) —— */
+    .bottom {
+      position: relative;
+      z-index: 3;
+      padding: 0 1rem 1.15rem;
+      display: grid;
+      gap: 0.75rem;
+      justify-items: center;
+      background: linear-gradient(180deg, transparent, rgba(8, 28, 34, 0.55) 35%, rgba(8, 28, 34, 0.72));
+      animation: rise 0.85s 0.05s ease both;
+    }
+
+    .caption {
+      width: min(100%, 34rem);
+      min-height: 3.2rem;
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+      line-height: 1.35;
+      font-weight: 600;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+      color: var(--foam);
+    }
+
+    .caption .who {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      font-weight: 700;
+    }
+
+    .caption .line {
+      display: block;
+    }
+
+    .caption .line.streaming::after {
+      content: "▍
+      animation: blink 1s steps(1) infinite;
+      color: var(--duck);
+    }
+
+    .caption .interim {
+      opacity: 0.75;
+      font-style: italic;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+    }
+
+    .talk {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .mic {
+      appearance: none;
+      border: 0;
+      width: 5.1rem;
+      height: 5.1rem;
+      border-radius: 50%;
+      background: linear-gradient(160deg, var(--duck), var(--duck-deep));
+      color: var(--ink);
+      font-weight: 800;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow:
+        0 0 0 0 rgba(240, 196, 58, 0.45),
+        0 14px 36px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s ease, filter 0.15s ease;
+      animation: micIdle 2.4s ease-in-out infinite;
+    }
+    .mic:hover { transform: translateY(-2px) scale(1.03); }
+    .mic:active { transform: scale(0.97); }
+    .mic.hot {
+      background: linear-gradient(160deg, #6fdb9a, #2f8a55);
+      color: #fff;
+      animation: micHot 1s ease-in-out infinite;
+    }
+    .mic:disabled {
+      filter: grayscale(0.35) brightness(0.9);
+      cursor: not-allowed;
+      animation: none;
+    }
+
+    .mic-hint {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .secondary {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .linkish {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: rgba(244, 250, 251, 0.85);
+      font: inherit;
+      font-size: 0.84rem;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 0.18em;
+      cursor: pointer;
+      padding: 0.25rem 0.35rem;
+    }
+    .linkish:hover { color: var(--duck); }
+
+    /* Type sheet — only when needed */
+    .type-sheet {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translate(-50%, 110%);
+      width: min(100%, 420px);
+      z-index: 5;
+      padding: 0.85rem 0.85rem 1.1rem;
+      background: rgba(12, 34, 40, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-bottom: 0;
+      border-radius: 1rem 1rem 0 0;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.35);
+      transition: transform 0.28s ease;
+      display: grid;
+      gap: 0.55rem;
+    }
+    .type-sheet.open { transform: translate(-50%, 0); }
+
+    .type-sheet textarea {
+      width: 100%;
+      min-height: 4.5rem;
+      resize: none;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 0.75rem;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--foam);
+      font: inherit;
+      font-weight: 600;
+      padding: 0.75rem 0.85rem;
+      outline: none;
+    }
+    .type-sheet textarea:focus {
+      border-color: rgba(240, 196, 58, 0.7);
+    }
+
+    .type-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 0.7rem;
+      padding: 0.55rem 0.95rem;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn.ghost {
+      background: transparent;
+      color: rgba(244, 250, 251, 0.8);
+    }
+    .btn.solid {
+      background: var(--duck);
+      color: var(--ink);
+    }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* History drawer — off-duck, opt-in */
+    .log-toggle {
+      position: fixed;
+      top: 1.15rem;
+      right: 1.15rem;
+      z-index: 4;
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: var(--glass);
+      backdrop-filter: blur(10px);
+      color: var(--foam);
+      font: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+      animation: rise 0.7s 0.1s ease both;
+    }
+    .log-toggle:hover { border-color: rgba(240, 196, 58, 0.55); }
+
+    .log {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 6;
+      width: min(100%, 360px);
+      height: 100%;
+      background: rgba(10, 28, 34, 0.96);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateX(105%);
+      transition: transform 0.3s ease;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 1rem 1rem 1.25rem;
+    }
+    .log.open { transform: translateX(0); }
+
+    .log h2 {
+      margin: 0 0 0.75rem;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+    }
+
+    .log-close {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--foam);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .log-stream {
+      overflow: auto;
+      padding-right: 0.25rem;
+    }
+
+    .log-stream .you,
+    .log-stream .duck {
+      margin: 0 0 0.85rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .log-stream .you { color: rgba(244, 250, 251, 0.72); }
+    .log-stream .duck { color: var(--foam); }
+    .log-stream .label {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      opacity: 0.65;
+      margin-bottom: 0.15rem;
+    }
+
+    .scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .scrim.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(240, 196, 58, 0.5); }
+      70% { box-shadow: 0 0 0 9px rgba(240, 196, 58, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(240, 196, 58, 0); }
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes floaty {
+      0%, 100% { transform: scale(1) translateY(0); }
+      50% { transform: scale(1) translateY(-10px); }
+    }
+    @keyframes softTip {
+      0%, 100% { transform: scale(1) rotate(-1.5deg); }
+      50% { transform: scale(1) rotate(-3deg) translateY(-4px); }
+    }
+    @keyframes hop {
+      0%, 100% { transform: scale(1) translateY(0); }
+      40% { transform: scale(1.02) translateY(-16px); }
+      70% { transform: scale(0.99) translateY(-4px); }
+    }
+    @keyframes micIdle {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(240, 196, 58, 0.4), 0 14px 36px rgba(0, 0, 0, 0.35); }
+      50% { box-shadow: 0 0 0 14px rgba(240, 196, 58, 0), 0 14px 36px rgba(0, 0, 0, 0.35); }
+    }
+    @keyframes micHot {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(111, 219, 154, 0.45), 0 14px 36px rgba(0, 0, 0, 0.35); }
+      50% { box-shadow: 0 0 0 16px rgba(111, 219, 154, 0), 0 14px 36px rgba(0, 0, 0, 0.35); }
+    }
+
+    @media (max-width: 640px) {
+      .top { padding: 0.9rem 1rem 0.25rem; }
+      .log-toggle { top: auto; bottom: 7.8rem; right: 0.85rem; }
+      .duck-stage img {
+        width: 100vw;
+        height: min(58dvh, 520px);
+      }
+      .mic { width: 4.6rem; height: 4.6rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .duck-stage img.active,
+      .mic,
+      .dot { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="world">
+    <header class="top">
+      <h1 class="brand">Rubber Duck</h1>
+      <div class="status" id="status">
+        <span class="dot" id="statusDot" aria-hidden="true"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
+    </header>
+
+    <main class="duck-stage" id="duckStage" aria-label="Rubber duck">
+      <img id="duck-base" src="/assets/duck-base.webp" alt="" width="960" height="540" />
+      <img id="duck-thinking" src="/assets/duck-thinking.webp" alt="" width="960" height="540" />
+      <img id="duck-excited" src="/assets/duck-excited.webp" alt="" width="960" height="540" />
+    </main>
+
+    <footer class="bottom">
+      <div class="caption" id="caption" aria-live="polite">
+        <span class="who" id="captionWho"></span>
+        <span class="line" id="captionLine">Tap the mic. Tell the duck what’s confusing.</span>
+      </div>
+
+      <div class="talk">
+        <button type="button" class="mic" id="micBtn" aria-pressed="false" title="Talk to the duck">Talk</button>
+        <p class="mic-hint" id="micHint">Hold Space or tap to talk</p>
+        <div class="secondary">
+          <button type="button" class="linkish" id="typeOpen">Type instead</button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <button type="button" class="log-toggle" id="logOpen">Log</button>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <aside class="log" id="log" aria-label="Conversation log" hidden>
+    <button type="button" class="log-close" id="logClose" aria-label="Close log">×</button>
+    <h2>Conversation</h2>
+    <div class="log-stream" id="stream"></div>
+  </aside>
+
+  <div class="type-sheet" id="typeSheet" hidden>
+    <textarea id="textInput" rows="3" placeholder="What’s going wrong in the code?"></textarea>
+    <div class="type-actions">
+      <button type="button" class="btn ghost" id="typeClose">Cancel</button>
+      <button type="button" class="btn solid" id="sendBtn">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const STATES = ["base", "thinking", "excited"];
+    const statusText = document.getElementById("statusText");
+    const statusDot = document.getElementById("statusDot");
+    const streamEl = document.getElementById("stream");
+    const micBtn = document.getElementById("micBtn");
+    const micHint = document.getElementById("micHint");
+    const sendBtn = document.getElementById("sendBtn");
+    const textInput = document.getElementById("textInput");
+    const duckStage = document.getElementById("duckStage");
+    const captionWho = document.getElementById("captionWho");
+    const captionLine = document.getElementById("captionLine");
+    const typeSheet = document.getElementById("typeSheet");
+    const logEl = document.getElementById("log");
+    const scrim = document.getElementById("scrim");
+
+    let duckState = "base";
+    let busy = false;
+    let connected = false;
+    let currentDuckBubble = null;
+    let recognition = null;
+    let listening = false;
+    let streamingCaption = false;
+
+    function setStatus(text, kind = "base") {
+      statusText.textContent = text;
+      statusDot.className = "dot" + (kind && kind !== "base" ? ` ${kind}` : "");
+    }
+
+    function setBusy(next) {
+      busy = next;
+      sendBtn.disabled = busy;
+      micBtn.disabled = busy && !listening;
+      textInput.disabled = busy;
+    }
+
+    function setDuckState(state) {
+      if (!STATES.includes(state)) return;
+      duckState = state;
+      duckStage.classList.remove("thinking", "excited");
+      if (state !== "base") duckStage.classList.add(state);
+      for (const s of STATES) {
+        document.getElementById(`duck-${s}`).classList.toggle("active", s === state);
+      }
+      if (state === "thinking") setStatus("Thinking…", "thinking");
+      else if (state === "excited") setStatus("Got it!", "base");
+      else if (!busy && connected) setStatus("Ready", "base");
+    }
+
+    function setCaption(who, text, { streaming = false, interim = false } = {}) {
+      captionWho.textContent = who || "";
+      captionLine.textContent = text || "";
+      captionLine.classList.toggle("streaming", streaming);
+      captionLine.classList.toggle("interim", interim);
+      streamingCaption = streaming;
+    }
+
+    function appendYou(text) {
+      const p = document.createElement("p");
+      p.className = "you";
+      p.innerHTML = `<span class="label">You</span>${escapeHtml(text)}`;
+      streamEl.appendChild(p);
+      streamEl.scrollTop = streamEl.scrollHeight;
+      setCaption("You", text);
+    }
+
+    function ensureDuckBubble() {
+      if (currentDuckBubble) return currentDuckBubble;
+      const p = document.createElement("p");
+      p.className = "duck";
+      p.innerHTML = `<span class="label">Duck</span><span class="body"></span>`;
+      streamEl.appendChild(p);
+      currentDuckBubble = p.querySelector(".body");
+      streamEl.scrollTop = streamEl.scrollHeight;
+      setCaption("Duck", "", { streaming: true });
+      return currentDuckBubble;
+    }
+
+    function appendToken(text) {
+      const body = ensureDuckBubble();
+      body.textContent += text;
+      setCaption("Duck", body.textContent, { streaming: true });
+      streamEl.scrollTop = streamEl.scrollHeight;
+    }
+
+    function finishDuckBubble() {
+      if (currentDuckBubble) {
+        setCaption("Duck", currentDuckBubble.textContent || "…", { streaming: false });
+        currentDuckBubble = null;
+      }
+      streamingCaption = false;
+      captionLine.classList.remove("streaming");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function openSheet(el) {
+      el.hidden = false;
+      requestAnimationFrame(() => el.classList.add("open"));
+      scrim.hidden = false;
+      requestAnimationFrame(() => scrim.classList.add("show"));
+    }
+
+    function closeSheet(el) {
+      el.classList.remove("open");
+      const done = () => {
+        el.hidden = true;
+        el.removeEventListener("transitionend", done);
+      };
+      el.addEventListener("transitionend", done);
+      if (![typeSheet, logEl].some((x) => x.classList.contains("open") && x !== el)) {
+        scrim.classList.remove("show");
+        setTimeout(() => { if (!scrim.classList.contains("show")) scrim.hidden = true; }, 280);
+      }
+    }
+
+    function closeAllOverlays() {
+      if (typeSheet.classList.contains("open")) closeSheet(typeSheet);
+      if (logEl.classList.contains("open")) closeSheet(logEl);
+    }
+
+    document.getElementById("typeOpen").addEventListener("click", () => {
+      openSheet(typeSheet);
+      textInput.focus();
+    });
+    document.getElementById("typeClose").addEventListener("click", () => closeSheet(typeSheet));
+    document.getElementById("logOpen").addEventListener("click", () => openSheet(logEl));
+    document.getElementById("logClose").addEventListener("click", () => closeSheet(logEl));
+    scrim.addEventListener("click", closeAllOverlays);
+
+    async function sendUtterance(text) {
+      const trimmed = String(text || "").trim();
+      if (!trimmed || busy) return;
+      closeSheet(typeSheet);
+      appendYou(trimmed);
+      setBusy(true);
+      setDuckState("thinking");
+      setStatus("Sent…", "thinking");
+      try {
+        const res = await fetch("/utterance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: trimmed }),
+        });
+        if (!res.ok) throw new Error("utterance failed");
+      } catch (err) {
+        setStatus("Bridge offline", "error");
+        setBusy(false);
+        setDuckState("base");
+        setCaption("Duck", `(bridge error: ${err.message})`);
+      }
+    }
+
+    function connectSSE() {
+      const es = new EventSource("/events");
+      es.onopen = () => {
+        connected = true;
+        setStatus("Ready", "base");
+      };
+      es.onerror = () => {
+        connected = false;
+        setStatus("Reconnecting…", "error");
+      };
+      es.onmessage = (msg) => {
+        let data;
+        try { data = JSON.parse(msg.data); } catch { return; }
+        const { type, text } = data;
+        if (type === "hello") {
+          connected = true;
+          setStatus("Ready", "base");
+          return;
+        }
+        if (type === "state") {
+          setDuckState(text || "base");
+          return;
+        }
+        if (type === "token") {
+          setBusy(true);
+          appendToken(text || "");
+          return;
+        }
+        if (type === "done") {
+          finishDuckBubble();
+          if (text && STATES.includes(text)) setDuckState(text);
+          else setDuckState("base");
+          setBusy(false);
+          setStatus("Ready", "base");
+          return;
+        }
+        if (type === "error") {
+          finishDuckBubble();
+          setCaption("Duck", text || "Something went wrong");
+          setBusy(false);
+          setDuckState("base");
+          setStatus("Error", "error");
+        }
+      };
+    }
+
+    function setupSpeech() {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        micHint.textContent = "Mic unavailable — use Type instead";
+        micBtn.disabled = true;
+        return;
+      }
+      recognition = new SR();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = navigator.language || "en-US";
+
+      recognition.onstart = () => {
+        listening = true;
+        micBtn.classList.add("hot");
+        micBtn.setAttribute("aria-pressed", "true");
+        micBtn.textContent = "…";
+        micHint.textContent = "Listening…";
+        setStatus("Listening", "listening");
+      };
+      recognition.onend = () => {
+        listening = false;
+        micBtn.classList.remove("hot");
+        micBtn.setAttribute("aria-pressed", "false");
+        micBtn.textContent = "Talk";
+        micHint.textContent = "Hold Space or tap to talk";
+        if (!busy && connected) setStatus("Ready", "base");
+      };
+      recognition.onerror = (e) => {
+        listening = false;
+        micBtn.classList.remove("hot");
+        micBtn.textContent = "Talk";
+        if (e.error !== "aborted" && e.error !== "no-speech") {
+          setStatus(`Mic: ${e.error}`, "error");
+        }
+      };
+      recognition.onresult = (event) => {
+        let interim = "";
+        let finalText = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const t = event.results[i][0].transcript;
+          if (event.results[i].isFinal) finalText += t;
+          else interim += t;
+        }
+        if (interim) setCaption("", interim, { interim: true });
+        if (finalText) sendUtterance(finalText);
+      };
+
+      const toggleMic = () => {
+        if (busy) return;
+        if (listening) {
+          recognition.stop();
+          return;
+        }
+        try { recognition.start(); } catch { /* already started */ }
+      };
+      micBtn.addEventListener("click", toggleMic);
+      window.addEventListener("keydown", (e) => {
+        if (e.code !== "Space") return;
+        if (e.target !== document.body && e.target !== document.documentElement) return;
+        e.preventDefault();
+        toggleMic();
+      });
+    }
+
+    sendBtn.addEventListener("click", () => {
+      const v = textInput.value;
+      textInput.value = "";
+      sendUtterance(v);
+    });
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+
+    Promise.all(
+      STATES.map(
+        (s) =>
+          new Promise((resolve) => {
+            const img = document.getElementById(`duck-${s}`);
+            if (img.complete) resolve();
+            else {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+            }
+          })
+      )
+    ).then(() => setDuckState("base"));
+
+    connectSSE();
+    setupSpeech();
+  </script>
+</body>
+</html>
