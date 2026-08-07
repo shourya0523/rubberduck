@@ -4,15 +4,15 @@ Voice-first rubber-duck debugging for GitHub Copilot and other coding agents.
 
 ## Install pathways
 
-See **[docs/INSTALL.md](../../docs/INSTALL.md)** for the full matrix.
+- Humans: **[docs/INSTALL.md](../../docs/INSTALL.md)**
+- LLMs / coding agents: **[docs/INSTALL-FOR-LLMS.md](../../docs/INSTALL-FOR-LLMS.md)**
 
 ```bash
-# A — gh CLI (personal)
-gh skill install shourya0523/rubberduck rubber-duck --scope user
+# A — gh CLI (personal) — requires gh >= 2.90
+gh skill install shourya0523/rubberduck rubber-duck --scope user --pin v0.1.0
 
 # B — installer from this repo
 ../../scripts/install.sh --scope user
-../../scripts/install.sh --scope user --agent cursor
 ../../scripts/install.sh --manual --scope user
 
 # C — manual copy
