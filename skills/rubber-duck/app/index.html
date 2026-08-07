@@ -28,7 +28,9 @@
       --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
       --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
       --bg-photo: url("/assets/desk-bg.webp");
-      --bg-pos: 72% 38%;
+      --bg-pos: 78% 36%;
+      --lamp-col: minmax(9.5rem, 38%);
+      --stream-max: min(30vh, 11.5rem);
     }
 
     * { box-sizing: border-box; }
@@ -43,56 +45,80 @@
 
     body {
       background-color: var(--desk-deep);
+      /* Lamp stays bright on the left; soft read scrim only on the right wall + desk band */
       background-image:
-        linear-gradient(180deg, rgba(8,12,10,0.42) 0%, rgba(8,12,10,0.12) 26%, rgba(8,12,10,0.05) 46%, rgba(8,12,10,0.45) 74%, rgba(6,8,7,0.82) 100%),
-        radial-gradient(ellipse 42% 38% at 18% 18%, rgba(8,12,10,0.55), transparent 72%),
-        radial-gradient(ellipse 50% 46% at 30% 48%, rgba(217,154,69,0.1), transparent 70%),
+        linear-gradient(180deg, transparent 0%, transparent 62%, rgba(6,8,7,0.35) 78%, rgba(6,8,7,0.78) 100%),
+        linear-gradient(90deg, transparent 0%, transparent 34%, rgba(8,12,10,0.22) 52%, rgba(8,12,10,0.5) 78%, rgba(8,12,10,0.58) 100%),
+        radial-gradient(ellipse 46% 52% at 22% 42%, rgba(240,189,104,0.14), transparent 68%),
         var(--bg-photo);
       background-size: cover, cover, cover, cover;
-      background-position: center, 12% 8%, 28% 40%, var(--bg-pos);
+      background-position: center, center, 18% 40%, var(--bg-pos);
       background-repeat: no-repeat;
       transition: filter 0.35s ease;
     }
     body.listening {
-      filter: saturate(1.08) brightness(1.05);
+      filter: saturate(1.08) brightness(1.04);
     }
 
     @media (min-width: 720px) {
       :root {
         --bg-photo: url("/assets/desk-bg-wide.webp");
-        --bg-pos: 58% 62%;
+        --bg-pos: 62% 58%;
+        --lamp-col: minmax(14rem, 40%);
+        --stream-max: min(28vh, 13rem);
       }
     }
 
+    /*
+      Composition:
+      - Left column = lamp clearance (photo element, no chrome)
+      - Right column = brand → large duck on dark wall → streaming panel
+      - Bottom band = controls on shadowed desk
+    */
     .world {
       min-height: 100dvh;
       height: 100%;
       display: grid;
+      grid-template-columns: var(--lamp-col) minmax(0, 1fr);
       grid-template-rows: auto minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        "lamp top"
+        "lamp stage"
+        "lamp words"
+        "bottom bottom";
       position: relative;
       isolation: isolate;
+      column-gap: clamp(0.25rem, 1.5vw, 1rem);
+    }
+
+    .lamp-zone {
+      grid-area: lamp;
+      pointer-events: none;
+      z-index: 0;
     }
 
     .top {
+      grid-area: top;
       z-index: 3;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.55rem;
-      padding: 1.15rem clamp(1rem, 3vw, 1.75rem) 0.2rem;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.65rem 1rem;
+      padding: 1.05rem clamp(0.9rem, 2.4vw, 1.6rem) 0.15rem 0.35rem;
       animation: rise 0.6s ease both;
     }
 
     .brand-block {
-      max-width: min(62vw, 24rem);
-      text-align: right;
-      text-shadow: 0 2px 22px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.85);
+      max-width: min(100%, 22rem);
+      text-align: left;
+      text-shadow: 0 2px 22px rgba(0,0,0,0.72), 0 1px 3px rgba(0,0,0,0.85);
     }
 
     .brand {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(2rem, 5.2vw, 3.15rem);
+      font-size: clamp(1.9rem, 4.4vw, 3rem);
       font-weight: 700;
       letter-spacing: -0.03em;
       line-height: 0.92;
@@ -112,14 +138,14 @@
       display: inline-flex;
       align-items: center;
       gap: 0.45rem;
-      margin-top: 0.35rem;
+      margin-top: 0.2rem;
       padding: 0.42rem 0.75rem;
       border-radius: 999px;
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--paper);
       white-space: nowrap;
-      background: rgba(12, 18, 15, 0.42);
+      background: rgba(12, 18, 15, 0.48);
       border: 1px solid rgba(243,235,224,0.12);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -130,29 +156,37 @@
       height: 0.42rem;
       border-radius: 50%;
       background: var(--ink-faint);
+      flex: 0 0 auto;
     }
     .phase-dot.listening { background: var(--lamp-hot); box-shadow: 0 0 10px rgba(240,189,104,0.7); }
     .phase-dot.waiting { background: var(--ink-faint); }
     .phase-dot.error { background: var(--bad); }
 
-    /* ————— Duck sits on the desk surface ————— */
+    /* ————— Large duck on the dark wall patch ————— */
     .duck-stage {
+      grid-area: stage;
       z-index: 1;
       min-height: 0;
       display: grid;
-      place-items: end center;
-      padding: 0 clamp(0.75rem, 3vw, 2rem) 0.25rem;
+      place-items: center center;
+      padding: 0.25rem 0.75rem 0.15rem 0.2rem;
       position: relative;
     }
 
     .duck {
-      width: min(58vw, 280px);
+      width: min(100%, 52vw, 440px);
+      max-height: min(52vh, 460px);
       height: auto;
       overflow: visible;
-      margin-bottom: clamp(0.2rem, 1.5vh, 1rem);
-      margin-right: clamp(0px, 8vw, 5rem);
-      filter: drop-shadow(0 18px 22px rgba(0,0,0,0.55));
+      justify-self: center;
+      filter: drop-shadow(0 22px 28px rgba(0,0,0,0.55));
       animation: duck-in 0.85s 0.1s ease both;
+      transition: width 0.35s ease, max-height 0.35s ease;
+    }
+    /* While a long reply streams, keep duck readable but leave room for the panel */
+    body.is-streaming .duck {
+      width: min(100%, 44vw, 360px);
+      max-height: min(42vh, 380px);
     }
 
     .duck * {
@@ -248,30 +282,44 @@
       50% { opacity: 0.9; transform: scaleX(1.06); }
     }
 
-    /* ————— Words over the dark desk foreground ————— */
+    /* ————— Streaming panel under the duck, right of the lamp ————— */
     .words {
+      grid-area: words;
       z-index: 2;
-      width: min(100%, 36rem);
-      margin: 0 auto;
-      padding: 0.35rem 1.1rem 0.55rem;
-      text-align: center;
+      width: 100%;
+      max-width: 36rem;
+      margin: 0;
+      padding: 0.2rem clamp(0.85rem, 2.2vw, 1.4rem) 0.45rem 0.25rem;
+      text-align: left;
       animation: rise 0.7s 0.05s ease both;
+      min-height: 0;
     }
 
     .words-panel {
-      padding: 0.85rem 1rem;
+      padding: 0.8rem 0.95rem;
       border-radius: 1rem;
-      background: rgba(10, 14, 12, 0.48);
+      background: rgba(10, 14, 12, 0.55);
       border: 1px solid rgba(243,235,224,0.1);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+      max-height: var(--stream-max);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(243,235,224,0.28) transparent;
+      transition: max-height 0.3s ease, background 0.25s ease;
+    }
+    body.is-streaming .words-panel {
+      background: rgba(10, 14, 12, 0.66);
+      max-height: min(36vh, 15rem);
     }
 
     .invite {
       margin: 0;
       font-family: var(--font-display);
-      font-size: clamp(1.12rem, 2.3vw, 1.35rem);
+      font-size: clamp(1.08rem, 2.1vw, 1.3rem);
       font-weight: 600;
       line-height: 1.35;
       color: var(--ink-soft);
@@ -280,11 +328,11 @@
 
     .you-block {
       margin: 0;
-      font-size: clamp(1.02rem, 2.2vw, 1.22rem);
+      font-size: clamp(1rem, 2vw, 1.18rem);
       font-weight: 600;
       line-height: 1.4;
       color: var(--paper);
-      min-height: 1.4em;
+      min-height: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -314,13 +362,14 @@
 
     /* ————— Bottom controls on shadowed desk edge ————— */
     .bottom {
+      grid-area: bottom;
       z-index: 3;
-      padding: 0.35rem 1rem 1.25rem;
+      padding: 0.4rem 1rem 1.2rem;
       display: grid;
       justify-items: center;
       gap: 0.45rem;
       animation: rise 0.75s 0.08s ease both;
-      background: linear-gradient(180deg, transparent 0%, rgba(6,8,7,0.35) 35%, rgba(6,8,7,0.62) 100%);
+      background: linear-gradient(180deg, transparent 0%, rgba(6,8,7,0.4) 40%, rgba(6,8,7,0.7) 100%);
     }
 
     .hold {
@@ -514,36 +563,51 @@
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    @media (max-width: 640px) {
-      .top { padding: 0.85rem 0.9rem 0.15rem; }
-      .brand { font-size: clamp(1.7rem, 8vw, 2.2rem); }
-      .duck {
-        width: min(52vw, 210px);
-        margin-right: 0;
+    @media (max-width: 720px) {
+      .world {
+        grid-template-columns: minmax(4.5rem, 28%) minmax(0, 1fr);
+        --stream-max: min(26vh, 9.5rem);
       }
-      .words { padding-inline: 0.75rem; }
-      .words-panel { padding: 0.75rem 0.85rem; }
+      .top { padding: 0.85rem 0.85rem 0.1rem 0.15rem; }
+      .brand { font-size: clamp(1.65rem, 7.5vw, 2.15rem); }
+      .duck {
+        width: min(100%, 62vw, 300px);
+        max-height: min(40vh, 300px);
+      }
+      body.is-streaming .duck {
+        width: min(100%, 50vw, 240px);
+        max-height: min(32vh, 240px);
+      }
+      .words { padding-inline: 0.65rem 0.75rem; }
+      .words-panel { padding: 0.7rem 0.8rem; }
       .hold { min-height: 3.25rem; }
-      :root { --bg-pos: 70% 42%; }
+      :root { --bg-pos: 82% 40%; }
     }
 
-    @media (min-width: 900px) {
+    @media (min-width: 1100px) {
       .duck {
-        width: min(32vw, 300px);
-        margin-right: clamp(2rem, 12vw, 9rem);
+        width: min(100%, 38vw, 480px);
+        max-height: min(56vh, 500px);
       }
-      .words { width: min(100%, 34rem); margin-right: clamp(1rem, 8vw, 6rem); margin-left: auto; }
+      body.is-streaming .duck {
+        width: min(100%, 32vw, 400px);
+        max-height: min(46vh, 420px);
+      }
+      .words { max-width: 38rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
       .duck .duck__all { animation: none; }
-      .duck { animation: none; }
+      .duck { animation: none; transition: none; }
       .nudge.streaming::after { animation: none; }
+      body.is-streaming .duck,
+      .words-panel { transition: none; }
     }
   </style>
 </head>
 <body>
   <div class="world">
+    <div class="lamp-zone" aria-hidden="true"></div>
     <header class="top">
       <div class="brand-block">
         <h1 class="brand">Rubber Duck</h1>
@@ -668,6 +732,8 @@
     let stateAnimTimer = null;
     let nudgeRenderTimer = null;
 
+    const wordsPanel = document.querySelector(".words-panel");
+
     function setPhase(text, kind = "") {
       phaseText.textContent = text;
       phaseDot.className = "phase-dot" + (kind ? ` ${kind}` : "");
@@ -698,15 +764,27 @@
       invite.classList.add("hide");
     }
 
+    function setStreaming(on) {
+      document.body.classList.toggle("is-streaming", on);
+    }
+
+    function scrollWordsToEnd() {
+      if (!wordsPanel) return;
+      wordsPanel.scrollTop = wordsPanel.scrollHeight;
+    }
+
     function setYouText(text, interim = false) {
       if (text) hideInvite();
       youLine.textContent = text || "";
       youLine.classList.toggle("interim", interim);
+      scrollWordsToEnd();
     }
 
     function setNudge(text, streaming = false) {
       nudgeLine.textContent = text || "";
       nudgeLine.classList.toggle("streaming", streaming);
+      setStreaming(streaming && Boolean(text));
+      scrollWordsToEnd();
     }
 
     function appendLogYou(text) {
@@ -731,6 +809,7 @@
     function appendLogToken(text) {
       const body = ensureLogDuck();
       body.textContent += text;
+      setStreaming(true);
       if (!nudgeRenderTimer) {
         nudgeRenderTimer = setTimeout(() => {
           nudgeRenderTimer = null;
@@ -748,6 +827,7 @@
         logDuckBody = null;
       }
       nudgeLine.classList.remove("streaming");
+      setStreaming(false);
     }
 
     function escapeHtml(s) {
