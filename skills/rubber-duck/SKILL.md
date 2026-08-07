@@ -109,15 +109,9 @@ Duck states: `base` | `thinking` | `excited`.
 
 Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them (safe to omit).
 
-## Duck assets
+## Duck
 
-State loops live in this skill’s `assets/` folder (animated WebP):
-
-- `duck-base.webp`
-- `duck-thinking.webp`
-- `duck-excited.webp`
-
-Replace `assets/source/duck-anim.webp` and run `node scripts/split-duck-webps.mjs` (needs Pillow) to regenerate.
+The duck is inline SVG + CSS inside `app/index.html`. Switch state by setting `data-state` on the SVG (`base`, `thinking`, `excited`). No image assets required.
 
 ## Ending
 

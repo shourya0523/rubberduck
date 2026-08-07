@@ -32,11 +32,6 @@ node scripts/bridge.mjs
 
 Open `http://127.0.0.1:3847/`.
 
-## Replace duck animation
+## Duck
 
-Overwrite `assets/source/duck-anim.webp`, then:
-
-```bash
-pip install Pillow
-node scripts/split-duck-webps.mjs
-```
+The duck is hand-drawn SVG + CSS in `app/index.html` (no asset files). States animate via `data-state` on the SVG.

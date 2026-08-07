@@ -66,10 +66,9 @@ node "$BRIDGE" done --state excited
 
 Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`).
 
-## Duck animation
+## Duck
 
-State loops: `assets/duck-{base,thinking,excited}.webp`  
-Re-split: `node skills/rubber-duck/scripts/split-duck-webps.mjs` (needs Pillow)
+The duck is hand-drawn inline SVG + CSS — no image files, no WebP. State changes are CSS-driven (`data-state="base|thinking|excited"`).
 
 ## Layout
 
@@ -87,4 +86,4 @@ Do not commit `.agents/skills` / `.claude/skills` — those are **install destin
 
 - Speech recognition in the HTML (Chrome/Edge)
 - Streaming agent replies over SSE
-- No runtime CDN — local WebP loops only
+- No runtime CDN or media files — duck is inline SVG
