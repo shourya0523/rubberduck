@@ -107,11 +107,13 @@ Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them
 
 ## Duck assets
 
-Replace models anytime (no HTML edits) inside this skill’s `assets/` folder:
+State loops live in this skill’s `assets/` folder (animated WebP):
 
-- `duck-base.glb`
-- `duck-thinking.glb`
-- `duck-excited.glb`
+- `duck-base.webp`
+- `duck-thinking.webp`
+- `duck-excited.webp`
+
+Replace `assets/source/duck-anim.webp` and run `node scripts/split-duck-webps.mjs` (needs Pillow) to regenerate.
 
 ## Ending
 

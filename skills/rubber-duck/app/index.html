@@ -4,14 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Rubber Duck</title>
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "/assets/vendor/three.module.js",
-      "three/addons/loaders/GLTFLoader.js": "/assets/vendor/loaders/GLTFLoader.js"
-    }
-  }
-  </script>
   <style>
     :root {
       --ink: #1a2a32;
@@ -21,10 +13,7 @@
       --duck-deep: #e0a92a;
       --water: #2f6f7e;
       --water-deep: #1e4a56;
-      --ripple: rgba(255, 255, 255, 0.35);
       --panel: rgba(247, 251, 252, 0.82);
-      --danger: #b33a3a;
-      --ok: #2f7d4a;
       --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
       --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
     }
@@ -35,7 +24,6 @@
       height: 100%;
       color: var(--ink);
       font-family: var(--font-body);
-      background: var(--water-deep);
       overflow: hidden;
     }
 
@@ -102,35 +90,36 @@
     .dot.listening { background: #6fd39a; }
     .dot.error { background: #ff8b8b; animation: none; }
 
-    #viewport {
+    .duck-stage {
       position: absolute;
       inset: 0;
       z-index: 0;
-    }
-    #viewport canvas {
-      display: block;
-      width: 100% !important;
-      height: 100% !important;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      overflow: hidden;
     }
 
-    .fallback-duck {
-      display: none;
+    .duck-stage img {
       position: absolute;
-      inset: 0;
-      z-index: 0;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-    .fallback-duck.show { display: flex; }
-    .fallback-duck svg {
-      width: min(52vw, 280px);
+      width: min(92vw, 920px);
       height: auto;
-      filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.28));
-      animation: bob 2.8s ease-in-out infinite;
+      max-height: 78vh;
+      object-fit: contain;
+      filter: drop-shadow(0 22px 40px rgba(0, 0, 0, 0.28));
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+      transition: opacity 420ms ease, transform 520ms ease;
     }
-    .fallback-duck.thinking svg { animation: tip 2.2s ease-in-out infinite; }
-    .fallback-duck.excited svg { animation: hop 0.7s ease-in-out infinite; }
+
+    .duck-stage img.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+
+    .duck-stage.thinking img.active { animation: softTip 2.6s ease-in-out infinite; }
+    .duck-stage.excited img.active { animation: hop 0.85s ease-in-out infinite; }
 
     .dock {
       position: relative;
@@ -265,21 +254,19 @@
       70% { box-shadow: 0 0 0 10px rgba(242, 201, 76, 0); }
       100% { box-shadow: 0 0 0 0 rgba(242, 201, 76, 0); }
     }
-    @keyframes blink {
-      50% { opacity: 0; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1); }
     }
-    @keyframes bob {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
-    }
-    @keyframes tip {
-      0%, 100% { transform: rotate(-8deg) translateY(0); }
-      50% { transform: rotate(-14deg) translateY(-4px); }
+    @keyframes softTip {
+      0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+      50% { transform: translateY(-4px) rotate(-3deg); }
     }
     @keyframes hop {
       0%, 100% { transform: translateY(0) scale(1); }
-      40% { transform: translateY(-18px) scale(1.03); }
-      70% { transform: translateY(-4px) scale(0.98); }
+      40% { transform: translateY(-14px) scale(1.02); }
+      70% { transform: translateY(-3px) scale(0.99); }
     }
     @keyframes glow {
       0%, 100% { box-shadow: 0 0 0 0 rgba(111, 211, 154, 0.45); }
@@ -291,6 +278,12 @@
       .controls { grid-template-columns: auto 1fr; }
       .send { grid-column: 1 / -1; min-height: 2.75rem; }
       .stream { max-height: 34vh; }
+      .duck-stage img { max-height: 62vh; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .duck-stage img.active { animation: none; }
+      .dot, .mic.hot { animation: none; }
     }
   </style>
 </head>
@@ -305,16 +298,10 @@
       </div>
     </header>
 
-    <div id="viewport" aria-hidden="true"></div>
-    <div class="fallback-duck" id="fallbackDuck" aria-hidden="true">
-      <svg viewBox="0 0 120 120" role="img" aria-label="Rubber duck">
-        <ellipse cx="60" cy="78" rx="34" ry="22" fill="#f2c94c"/>
-        <circle cx="78" cy="48" r="22" fill="#f2c94c"/>
-        <ellipse cx="96" cy="50" rx="10" ry="6" fill="#e0892a"/>
-        <circle cx="84" cy="44" r="3" fill="#1a2a32"/>
-        <ellipse cx="48" cy="80" rx="10" ry="14" fill="#e0a92a" transform="rotate(-20 48 80)"/>
-        <ellipse cx="72" cy="80" rx="10" ry="14" fill="#e0a92a" transform="rotate(20 72 80)"/>
-      </svg>
+    <div class="duck-stage" id="duckStage" aria-hidden="true">
+      <img id="duck-base" src="/assets/duck-base.webp" alt="" width="960" height="540" />
+      <img id="duck-thinking" src="/assets/duck-thinking.webp" alt="" width="960" height="540" />
+      <img id="duck-excited" src="/assets/duck-excited.webp" alt="" width="960" height="540" />
     </div>
 
     <div class="dock">
@@ -328,10 +315,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import * as THREE from "three";
-    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
+  <script>
     const STATES = ["base", "thinking", "excited"];
     const statusText = document.getElementById("statusText");
     const statusDot = document.getElementById("statusDot");
@@ -340,8 +324,7 @@
     const sendBtn = document.getElementById("sendBtn");
     const textInput = document.getElementById("textInput");
     const hint = document.getElementById("hint");
-    const fallbackDuck = document.getElementById("fallbackDuck");
-    const viewport = document.getElementById("viewport");
+    const duckStage = document.getElementById("duckStage");
 
     let duckState = "base";
     let busy = false;
@@ -366,9 +349,11 @@
     function setDuckState(state) {
       if (!STATES.includes(state)) return;
       duckState = state;
-      fallbackDuck.classList.remove("thinking", "excited");
-      if (state !== "base") fallbackDuck.classList.add(state);
-      if (window.__setDuckModel) window.__setDuckModel(state);
+      duckStage.classList.remove("thinking", "excited");
+      if (state !== "base") duckStage.classList.add(state);
+      for (const s of STATES) {
+        document.getElementById(`duck-${s}`).classList.toggle("active", s === state);
+      }
       if (state === "thinking") setStatus("Duck is thinking…", "thinking");
       else if (state === "excited") setStatus("Insight!", "base");
       else if (!busy && connected) setStatus("Ready — talk to the duck", "base");
@@ -491,9 +476,7 @@
           setBusy(false);
           setDuckState("base");
           setStatus("Something went wrong", "error");
-          return;
         }
-        // diagram / speak: ignored in v1
       };
     }
 
@@ -551,11 +534,7 @@
           recognition.stop();
           return;
         }
-        try {
-          recognition.start();
-        } catch {
-          /* already started */
-        }
+        try { recognition.start(); } catch { /* already started */ }
       };
       micBtn.addEventListener("click", toggleMic);
       window.addEventListener("keydown", (e) => {
@@ -578,94 +557,23 @@
       }
     });
 
-    async function setupScene() {
-      try {
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setSize(viewport.clientWidth, viewport.clientHeight);
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-        viewport.appendChild(renderer.domElement);
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(
-          35,
-          viewport.clientWidth / Math.max(viewport.clientHeight, 1),
-          0.1,
-          100
-        );
-        camera.position.set(0.15, 1.15, 3.4);
-
-        const hemi = new THREE.HemisphereLight(0xe8f6ff, 0x2f6f7e, 1.1);
-        scene.add(hemi);
-        const key = new THREE.DirectionalLight(0xfff2c9, 1.35);
-        key.position.set(2.5, 4, 2);
-        scene.add(key);
-        const fill = new THREE.DirectionalLight(0x8ed0e0, 0.55);
-        fill.position.set(-3, 1, -1);
-        scene.add(fill);
-
-        const models = { base: null, thinking: null, excited: null };
-        const root = new THREE.Group();
-        scene.add(root);
-        const loader = new GLTFLoader();
-
-        async function loadOne(name) {
-          const gltf = await loader.loadAsync(`/assets/duck-${name}.glb`);
-          const obj = gltf.scene;
-          obj.visible = false;
-          obj.traverse((c) => {
-            if (c.isMesh) {
-              c.material = new THREE.MeshStandardMaterial({
-                vertexColors: true,
-                roughness: 0.45,
-                metalness: 0.05,
-              });
+    // Preload loops, then show base
+    Promise.all(
+      STATES.map(
+        (s) =>
+          new Promise((resolve) => {
+            const img = document.getElementById(`duck-${s}`);
+            if (img.complete) resolve();
+            else {
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
             }
-          });
-          root.add(obj);
-          models[name] = obj;
-        }
-
-        await Promise.all(STATES.map(loadOne));
-        models.base.visible = true;
-
-        let bobPhase = 0;
-        window.__setDuckModel = (state) => {
-          for (const s of STATES) {
-            if (models[s]) models[s].visible = s === state;
-          }
-        };
-
-        function onResize() {
-          const w = viewport.clientWidth;
-          const h = viewport.clientHeight;
-          camera.aspect = w / Math.max(h, 1);
-          camera.updateProjectionMatrix();
-          renderer.setSize(w, h);
-        }
-        window.addEventListener("resize", onResize);
-
-        function frame(t) {
-          requestAnimationFrame(frame);
-          bobPhase = t * 0.001;
-          const amp = duckState === "excited" ? 0.12 : duckState === "thinking" ? 0.03 : 0.05;
-          root.position.y = Math.sin(bobPhase * (duckState === "excited" ? 6 : 2.2)) * amp;
-          root.rotation.y = Math.sin(bobPhase * 0.7) * 0.15;
-          if (duckState === "thinking") root.rotation.z = -0.12;
-          else root.rotation.z = THREE.MathUtils.lerp(root.rotation.z, 0, 0.08);
-          renderer.render(scene, camera);
-        }
-        requestAnimationFrame(frame);
-      } catch (err) {
-        console.warn("WebGL/duck load failed, using fallback", err);
-        fallbackDuck.classList.add("show");
-        window.__setDuckModel = () => {};
-      }
-    }
+          })
+      )
+    ).then(() => setDuckState("base"));
 
     connectSSE();
     setupSpeech();
-    setupScene();
   </script>
 </body>
 </html>

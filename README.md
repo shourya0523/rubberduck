@@ -83,18 +83,19 @@ node "$BRIDGE" done --state excited
 
 Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`).
 
-## Duck models
+## Duck animation
 
-Drop your own GLBs over these paths (same names) inside the skill’s `assets/` folder:
+State loops are animated WebPs (split from `assets/source/duck-anim.webp`):
 
-- `duck-base.glb`
-- `duck-thinking.glb`
-- `duck-excited.glb`
+- `assets/duck-base.webp`
+- `assets/duck-thinking.webp`
+- `assets/duck-excited.webp`
 
-Regenerate placeholders:
+Re-split after replacing the source film:
 
 ```bash
-node skills/rubber-duck/scripts/make-placeholder-glbs.mjs
+pip install Pillow   # once
+node skills/rubber-duck/scripts/split-duck-webps.mjs
 ```
 
 ## Layout
@@ -103,16 +104,17 @@ node skills/rubber-duck/scripts/make-placeholder-glbs.mjs
 skills/rubber-duck/           # canonical (gh skill install)
   SKILL.md
   scripts/bridge.mjs
+  scripts/split-duck-webps.mjs
   app/index.html
-  assets/duck-*.glb
-  assets/vendor/              # three.js (no CDN at runtime)
-.github/skills/rubber-duck -> ../../skills/rubber-duck   # Copilot project discovery
+  assets/duck-*.webp          # state loops
+  assets/source/duck-anim.webp
+.github/skills/rubber-duck -> ../../skills/rubber-duck
 ```
 
 ## Hard constraints (v1)
 
 - Speech recognition in the HTML (Chrome/Edge).
 - Streaming agent replies over SSE (no waiting for a full blob).
-- No runtime CDN / npm install for the UI — vendored Three.js + local GLBs.
+- No runtime CDN — local WebP loops only.
 
 Reach goals (stubbed / ignored for now): diagram events, duck TTS.

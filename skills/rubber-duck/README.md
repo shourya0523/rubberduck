@@ -24,6 +24,11 @@ node scripts/bridge.mjs
 
 Open `http://127.0.0.1:3847/`.
 
-## Replace models
+## Replace duck animation
 
-Overwrite `assets/duck-base.glb`, `assets/duck-thinking.glb`, and `assets/duck-excited.glb`.
+Overwrite `assets/source/duck-anim.webp`, then:
+
+```bash
+pip install Pillow
+node scripts/split-duck-webps.mjs
+```

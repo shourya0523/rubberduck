@@ -38,6 +38,8 @@ const MIME = {
   ".gltf": "model/gltf+json",
   ".png": "image/png",
   ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
   ".svg": "image/svg+xml",
   ".wasm": "application/wasm",
   ".map": "application/json",
