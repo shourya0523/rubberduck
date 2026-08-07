@@ -2,13 +2,24 @@
 
 Agent skill for rubber-duck debugging sessions. See the repository [README](../../../README.md) for full docs.
 
-## Invoke
+## Install into another project
 
-Ask Copilot (or another coding agent):
+```bash
+# from the other project's root
+mkdir -p .github/skills
+cp -R /path/to/rubberduck/.github/skills/rubber-duck .github/skills/
+```
 
-> Start a rubber duck session
+Or personal (all projects):
 
-Or run:
+```bash
+cp -R /path/to/rubberduck/.github/skills/rubber-duck ~/.copilot/skills/
+cp -R /path/to/rubberduck/.github/skills/rubber-duck ~/.agents/skills/
+```
+
+Open that project → new **Agent** chat → “Start a rubber duck session”.
+
+## Invoke manually
 
 ```bash
 node scripts/bridge.mjs
