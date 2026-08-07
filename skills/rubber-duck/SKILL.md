@@ -28,12 +28,14 @@ Activate when the user mentions rubber-ducking, talking to the duck, explaining 
 Before starting, resolve `BRIDGE` to this skill’s `scripts/bridge.mjs` (same folder tree as this `SKILL.md`):
 
 ```bash
-# Prefer the path where this skill is installed, e.g.:
-#   .github/skills/rubber-duck/scripts/bridge.mjs
-#   .agents/skills/rubber-duck/scripts/bridge.mjs
+# Installed via `gh skill install … --scope user`, or checked out in-repo, e.g.:
 #   ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
 #   ~/.agents/skills/rubber-duck/scripts/bridge.mjs
-BRIDGE="$(find .github/skills .agents/skills "$HOME/.copilot/skills" "$HOME/.agents/skills" \
+#   skills/rubber-duck/scripts/bridge.mjs
+#   .github/skills/rubber-duck/scripts/bridge.mjs
+BRIDGE="$(find \
+  "$HOME/.copilot/skills" "$HOME/.agents/skills" \
+  skills .github/skills .agents/skills .claude/skills \
   -path '*/rubber-duck/scripts/bridge.mjs' 2>/dev/null | head -n 1)"
 # Or set BRIDGE to the absolute path of scripts/bridge.mjs next to this SKILL.md.
 ```
