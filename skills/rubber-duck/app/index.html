@@ -487,6 +487,7 @@
     @keyframes blink { 50% { opacity: 0; } }
 
     @media (max-width: 640px) {
+      :root { --stream-max: min(24vh, 9rem); }
       .world { padding-inline: 0.7rem; gap: 0.45rem; }
       .duck-frame {
         width: min(92vw, 360px);
@@ -494,7 +495,6 @@
       }
       .chrome { padding: 0.6rem 0.75rem; border-radius: 1rem; }
       .brand { font-size: 1.25rem; }
-      --stream-max: min(24vh, 9rem);
     }
 
     @media (prefers-reduced-motion: reduce) {
