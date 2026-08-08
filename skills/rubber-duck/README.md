@@ -34,4 +34,4 @@ Open `http://127.0.0.1:3847/`.
 
 ## Duck
 
-The duck is hand-drawn SVG + CSS in `app/index.html` (no asset files). States animate via `data-state` on the SVG.
+WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). The UI uses an atmospheric material background (warm light pool over graphite) so translucent chrome stays clear — no photo backdrop.
