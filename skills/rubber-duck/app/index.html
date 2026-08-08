@@ -2,35 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Rubber Duck — Explain</title>
   <style>
+    /*
+      Layout decision — atmospheric material background:
+      Soft warm lamp pool over deep graphite. No photo backdrop.
+      Busy photography fights translucent materials, hierarchy, and
+      the WebP duck as the single visual anchor (Apple: restraint).
+    */
     :root {
-      --paper: #f3ebe0;
-      --paper-deep: #cfc2ad;
-      --ink: #f3ebe0;
-      --ink-dark: #141816;
-      --ink-soft: rgba(243, 235, 224, 0.78);
-      --ink-faint: rgba(243, 235, 224, 0.52);
-      --lamp: #d99a45;
-      --lamp-hot: #f0bd68;
-      --duck: #eab52d;
-      --duck-deep: #c88e18;
-      --duck-shadow: #a97212;
-      --beak: #de6b2f;
-      --beak-deep: #b94d1f;
-      --desk: #1a211c;
-      --desk-deep: #0c100e;
-      --forest: #1a2e24;
-      --line: rgba(243, 235, 224, 0.14);
-      --ok: #2e6b4f;
-      --bad: #9b3b3b;
-      --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-      --font-body: "Avenir Next", Avenir, "Century Gothic", Candara, "Segoe UI", sans-serif;
-      --bg-photo: url("/assets/desk-bg.webp");
-      --bg-pos: 78% 36%;
-      --lamp-col: minmax(10rem, 42%);
-      --stream-max: min(30vh, 11.5rem);
+      --bg-0: #121418;
+      --bg-1: #1a1d22;
+      --warm: rgba(232, 186, 112, 0.34);
+      --warm-hot: rgba(242, 205, 128, 0.48);
+      --ink: #f5f2ea;
+      --ink-soft: rgba(245, 242, 234, 0.72);
+      --ink-faint: rgba(245, 242, 234, 0.46);
+      --ink-dark: #1a1d22;
+      --accent: #e8b438;
+      --accent-deep: #c99512;
+      --bad: #d45b5b;
+      --glass: rgba(28, 30, 36, 0.55);
+      --glass-strong: rgba(22, 24, 28, 0.78);
+      --glass-edge: rgba(255, 255, 255, 0.12);
+      --glass-edge-bright: rgba(255, 255, 255, 0.22);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.38);
+      --spring: cubic-bezier(0.32, 0.72, 0, 1);
+      --spring-fast: cubic-bezier(0.22, 1, 0.36, 1);
+      --font: system-ui, -apple-system, "SF Pro Text", "Segoe UI", sans-serif;
+      --stream-max: min(28vh, 11rem);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
     }
 
     * { box-sizing: border-box; }
@@ -38,96 +41,75 @@
       margin: 0;
       height: 100%;
       color: var(--ink);
-      font-family: var(--font-body);
+      font: 100%/1.45 var(--font);
+      -webkit-font-smoothing: antialiased;
       overflow: hidden;
-      background: var(--desk-deep);
+      background: var(--bg-0);
     }
 
     body {
-      background-color: var(--desk-deep);
-      /* Lamp stays bright on the left; soft read scrim only on the right wall + desk band */
-      background-image:
-        linear-gradient(180deg, transparent 0%, transparent 62%, rgba(6,8,7,0.35) 78%, rgba(6,8,7,0.78) 100%),
-        linear-gradient(90deg, transparent 0%, transparent 34%, rgba(8,12,10,0.22) 52%, rgba(8,12,10,0.5) 78%, rgba(8,12,10,0.58) 100%),
-        radial-gradient(ellipse 46% 52% at 22% 42%, rgba(240,189,104,0.14), transparent 68%),
-        var(--bg-photo);
-      background-size: cover, cover, cover, cover;
-      background-position: center, center, 18% 40%, var(--bg-pos);
-      background-repeat: no-repeat;
-      transition: filter 0.35s ease;
+      background:
+        radial-gradient(ellipse 72% 58% at 50% 34%, var(--warm), transparent 62%),
+        radial-gradient(ellipse 100% 48% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 58%),
+        linear-gradient(180deg, #1c1f25 0%, var(--bg-0) 46%, #0e1013 100%);
+      transition: filter 0.35s var(--spring);
     }
     body.listening {
-      filter: saturate(1.08) brightness(1.04);
+      background:
+        radial-gradient(ellipse 78% 62% at 50% 32%, var(--warm-hot), transparent 64%),
+        radial-gradient(ellipse 100% 48% at 50% 100%, rgba(0, 0, 0, 0.5), transparent 58%),
+        linear-gradient(180deg, #242018 0%, #16181c 46%, #0e1013 100%);
+    }
+    body.is-streaming .duck-frame {
+      transform: scale(0.94);
     }
 
-    @media (min-width: 720px) {
-      :root {
-        --bg-photo: url("/assets/desk-bg-wide.webp");
-        --bg-pos: 62% 58%;
-        --lamp-col: minmax(15rem, 44%);
-        --stream-max: min(28vh, 13rem);
-      }
-    }
-
-    /*
-      Composition:
-      - Left column = lamp clearance (photo element, no chrome)
-      - Right column = brand → large duck on dark wall → streaming panel
-      - Bottom band = controls on shadowed desk
-    */
     .world {
       min-height: 100dvh;
       height: 100%;
       display: grid;
-      grid-template-columns: var(--lamp-col) minmax(0, 1fr);
-      grid-template-rows: auto minmax(0, 1fr) auto auto;
-      grid-template-areas:
-        "lamp top"
-        "lamp stage"
-        "lamp words"
-        "bottom bottom";
+      grid-template-rows: auto minmax(0, 1.15fr) auto auto;
       position: relative;
       isolation: isolate;
-      column-gap: clamp(0.25rem, 1.5vw, 1rem);
+      padding:
+        calc(0.55rem + var(--safe-t))
+        1rem
+        calc(0.7rem + var(--safe-b));
+      gap: 0.55rem;
+      max-width: 44rem;
+      margin: 0 auto;
     }
 
-    .lamp-zone {
-      grid-area: lamp;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .top {
-      grid-area: top;
+    /* ——— Floating chrome ——— */
+    .chrome {
       z-index: 3;
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.55rem;
-      padding: 1.05rem clamp(0.9rem, 2.4vw, 1.6rem) 0.15rem 0.35rem;
-      animation: rise 0.6s ease both;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: 1.15rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-edge);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+      animation: material-in 0.45s var(--spring) both;
     }
 
-    .brand-block {
-      max-width: min(100%, 22rem);
-      text-align: right;
-      text-shadow: 0 2px 22px rgba(0,0,0,0.72), 0 1px 3px rgba(0,0,0,0.85);
-    }
-
+    .brand-block { min-width: 0; }
     .brand {
       margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(1.9rem, 4.4vw, 3rem);
+      font-size: clamp(1.35rem, 3.6vw, 1.75rem);
       font-weight: 700;
       letter-spacing: -0.03em;
-      line-height: 0.92;
-      color: var(--paper);
+      line-height: 1.05;
+      color: var(--ink);
     }
-
     .mode {
-      margin: 0.28rem 0 0;
-      font-size: 0.72rem;
-      font-weight: 700;
+      margin: 0.18rem 0 0;
+      font-size: 0.68rem;
+      font-weight: 650;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--ink-faint);
@@ -136,204 +118,107 @@
     .phase {
       display: inline-flex;
       align-items: center;
-      gap: 0.45rem;
-      margin-top: 0.2rem;
-      padding: 0.42rem 0.75rem;
+      gap: 0.4rem;
+      padding: 0.38rem 0.7rem;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: var(--paper);
+      color: var(--ink-soft);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       white-space: nowrap;
-      background: rgba(12, 18, 15, 0.48);
-      border: 1px solid rgba(243,235,224,0.12);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      flex: 0 0 auto;
     }
     .phase-dot {
-      width: 0.42rem;
-      height: 0.42rem;
+      width: 0.4rem;
+      height: 0.4rem;
       border-radius: 50%;
       background: var(--ink-faint);
       flex: 0 0 auto;
     }
-    .phase-dot.listening { background: var(--lamp-hot); box-shadow: 0 0 10px rgba(240,189,104,0.7); }
-    .phase-dot.waiting { background: var(--ink-faint); }
+    .phase-dot.listening {
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(232, 180, 56, 0.65);
+    }
+    .phase-dot.waiting { background: rgba(245, 242, 234, 0.35); }
     .phase-dot.error { background: var(--bad); }
 
-    /* ————— Large duck on the dark wall patch ————— */
+    /* ——— Duck stage (hero) ——— */
     .duck-stage {
-      grid-area: stage;
       z-index: 1;
       min-height: 0;
       display: grid;
-      place-items: center end;
-      padding: 0.15rem clamp(0.6rem, 2vw, 1.4rem) 0.1rem 0;
+      place-items: center;
       position: relative;
     }
 
-    .duck {
-      width: min(96%, 560px);
-      max-height: min(62vh, 560px);
-      height: auto;
-      overflow: visible;
-      justify-self: end;
-      filter: drop-shadow(0 24px 30px rgba(0,0,0,0.58));
-      animation: duck-in 0.85s 0.1s ease both;
-      transition: width 0.35s ease, max-height 0.35s ease;
+    .duck-frame {
+      position: relative;
+      width: min(86vw, 420px);
+      height: min(48dvh, 420px);
+      transform-origin: 50% 70%;
+      transition: transform 0.4s var(--spring);
+      filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.45));
+      animation: duck-in 0.55s var(--spring) both;
+      will-change: transform;
     }
-    /* While a long reply streams, ease duck down slightly so the panel can grow */
-    body.is-streaming .duck {
-      width: min(88%, 460px);
-      max-height: min(50vh, 460px);
-    }
-
-    .duck * {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-
-    .duck__all { transform-origin: 50% 82%; }
-
-    .duck.is-transition[data-state="base"] .duck__all { animation: settle 0.7s ease-out 1; }
-    .duck.is-transition[data-state="thinking"] .duck__all { animation: consider 0.8s ease-out 1; }
-    .duck.is-transition[data-state="excited"] .duck__all { animation: bounce 0.62s cubic-bezier(0.34, 0.8, 0.4, 1) 2; }
-
-    .duck__head {
-      transform-origin: 58% 88%;
-      transition: transform 0.35s ease;
-    }
-    .duck[data-state="thinking"] .duck__head { transform: rotate(-9deg) translate(-2px, 3px); }
-    .duck[data-state="excited"] .duck__head { transform: rotate(2deg) translateY(-3px); }
-    .duck.is-listening .duck__head { transform: rotate(4deg) translate(2px, 2px); }
-
-    .duck__beak {
-      transform-origin: left center;
-      transition: transform 0.25s ease;
-    }
-    .duck[data-state="excited"] .duck__beak { transform: scale(1.12) rotate(-4deg); }
-
-    .duck__eye {
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    .duck[data-state="thinking"] .duck__eye {
-      transform: scaleY(0.14);
-      opacity: 0.9;
-    }
-
-    .duck__brow {
-      opacity: 0;
-      transform: translateY(2px) rotate(0deg);
-      transition: opacity 0.25s ease, transform 0.25s ease;
-    }
-    .duck[data-state="thinking"] .duck__brow {
-      opacity: 1;
-      transform: translateY(-4px) rotate(-10deg);
-    }
-
-    .duck__wing-l,
-    .duck__wing-r {
-      transition: transform 0.4s cubic-bezier(0.34, 0.9, 0.4, 1);
-    }
-    .duck__wing-l { transform-origin: 88% 30%; }
-    .duck__wing-r { transform-origin: 12% 30%; }
-
-    .duck[data-state="excited"] .duck__wing-l { transform: rotate(-38deg) translate(-6px, -10px); }
-    .duck[data-state="excited"] .duck__wing-r { transform: rotate(38deg) translate(6px, -10px); }
-    .duck[data-state="thinking"] .duck__wing-l { transform: rotate(6deg) translateY(2px); }
-
-    .duck__sparkle {
-      opacity: 0;
-      transform: scale(0.3);
-      transition: opacity 0.3s ease, transform 0.35s ease;
-    }
-    .duck[data-state="excited"] .duck__sparkle {
-      opacity: 1;
-      transform: scale(1);
-    }
-    .duck[data-state="excited"] .duck__sparkle--a { transition-delay: 0.05s; }
-    .duck[data-state="excited"] .duck__sparkle--b { transition-delay: 0.12s; }
-    .duck[data-state="excited"] .duck__sparkle--c { transition-delay: 0.19s; }
-
-    .duck__ripple {
-      fill: none;
-      stroke: rgba(29, 36, 40, 0.18);
-      stroke-width: 2.5;
-    }
-    .duck.is-transition .duck__ripple { animation: ripple 0.7s ease-out 2; }
-
-    @keyframes settle {
-      0% { transform: translateY(-7px) rotate(-1deg); }
-      100% { transform: translateY(0) rotate(0deg); }
-    }
-    @keyframes consider {
-      0% { transform: translateY(0) rotate(0deg); }
-      55% { transform: translateY(2px) rotate(-2.2deg); }
-      100% { transform: translateY(0) rotate(-1.5deg); }
-    }
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0) scale(1); }
-      35% { transform: translateY(-22px) scale(1.03); }
-      70% { transform: translateY(-4px) scale(0.99); }
-    }
-    @keyframes ripple {
-      0%, 100% { opacity: 0.5; transform: scaleX(1); }
-      50% { opacity: 0.9; transform: scaleX(1.06); }
-    }
-
-    /* ————— Streaming panel under the duck, right of the lamp ————— */
-    .words {
-      grid-area: words;
-      z-index: 2;
+    .duck-frame img {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      margin: 0;
-      padding: 0.2rem clamp(0.85rem, 2.2vw, 1.4rem) 0.45rem 0.25rem;
-      text-align: left;
-      animation: rise 0.7s 0.05s ease both;
-      min-height: 0;
-      display: flex;
-      justify-content: flex-end;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s var(--spring-fast);
     }
+    .duck-frame img.show { opacity: 1; }
 
+    /* ——— Transcript material ——— */
+    .words {
+      z-index: 2;
+      min-height: 0;
+      animation: material-in 0.5s 0.04s var(--spring) both;
+    }
     .words-panel {
-      width: min(100%, 36rem);
-      padding: 0.8rem 0.95rem;
-      border-radius: 1rem;
-      background: rgba(10, 14, 12, 0.55);
-      border: 1px solid rgba(243,235,224,0.1);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+      padding: 0.95rem 1.05rem;
+      border-radius: 1.25rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-edge);
+      border-top-color: var(--glass-edge-bright);
+      backdrop-filter: blur(24px) saturate(170%);
+      -webkit-backdrop-filter: blur(24px) saturate(170%);
+      box-shadow: var(--shadow);
       max-height: var(--stream-max);
       overflow-x: hidden;
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-width: thin;
-      scrollbar-color: rgba(243,235,224,0.28) transparent;
-      transition: max-height 0.3s ease, background 0.25s ease;
+      scrollbar-color: rgba(245, 242, 234, 0.25) transparent;
+      transition: max-height 0.35s var(--spring), background 0.25s ease;
     }
     body.is-streaming .words-panel {
-      background: rgba(10, 14, 12, 0.66);
       max-height: min(36vh, 15rem);
+      background: var(--glass-strong);
     }
 
     .invite {
       margin: 0;
-      font-family: var(--font-display);
-      font-size: clamp(1.08rem, 2.1vw, 1.3rem);
+      font-size: clamp(1.05rem, 2.4vw, 1.25rem);
       font-weight: 600;
-      line-height: 1.35;
+      letter-spacing: -0.015em;
+      line-height: 1.3;
       color: var(--ink-soft);
     }
     .invite.hide { display: none; }
 
     .you-block {
       margin: 0;
-      font-size: clamp(1rem, 2vw, 1.18rem);
-      font-weight: 600;
-      line-height: 1.4;
-      color: var(--paper);
-      min-height: 0;
+      font-size: clamp(1rem, 2.2vw, 1.18rem);
+      font-weight: 650;
+      letter-spacing: -0.012em;
+      line-height: 1.35;
+      color: var(--ink);
       white-space: pre-wrap;
       word-break: break-word;
     }
@@ -345,143 +230,169 @@
     }
 
     .nudge {
-      margin: 0.45rem 0 0;
+      margin: 0.5rem 0 0;
       font-size: 0.95rem;
       font-weight: 500;
       line-height: 1.45;
       color: var(--ink-faint);
-      min-height: 0;
       white-space: pre-wrap;
       word-break: break-word;
     }
     .nudge:empty { display: none; margin: 0; }
     .nudge.streaming::after {
       content: " ·";
-      color: var(--lamp-hot);
+      color: var(--accent);
       animation: blink 1s steps(1) infinite;
     }
 
-    /* ————— Bottom controls on shadowed desk edge ————— */
-    .bottom {
-      grid-area: bottom;
+    /* ——— Dock ——— */
+    .dock {
       z-index: 3;
-      padding: 0.4rem 1rem 1.2rem;
       display: grid;
+      gap: 0.55rem;
       justify-items: center;
-      gap: 0.45rem;
-      animation: rise 0.75s 0.08s ease both;
-      background: linear-gradient(180deg, transparent 0%, rgba(6,8,7,0.4) 40%, rgba(6,8,7,0.7) 100%);
+      padding: 0.75rem 0.85rem 0.85rem;
+      border-radius: 1.35rem;
+      background: var(--glass-strong);
+      border: 1px solid var(--glass-edge);
+      border-top-color: var(--glass-edge-bright);
+      backdrop-filter: blur(26px) saturate(180%);
+      -webkit-backdrop-filter: blur(26px) saturate(180%);
+      box-shadow: 0 -8px 36px rgba(0, 0, 0, 0.28);
+      animation: material-in 0.55s 0.06s var(--spring) both;
     }
 
     .hold {
       appearance: none;
       border: 0;
-      width: min(92vw, 21rem);
-      min-height: 3.45rem;
-      padding: 0.8rem 1.2rem;
+      width: min(100%, 22rem);
+      min-height: 3.4rem;
+      padding: 0.85rem 1.2rem;
       border-radius: 999px;
-      background: rgba(22, 28, 25, 0.82);
-      color: var(--paper);
-      border: 1px solid rgba(243,235,224,0.18);
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--ink);
+      border: 1px solid rgba(255, 255, 255, 0.16);
       font: inherit;
-      font-size: 1rem;
+      font-size: 1.02rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       cursor: pointer;
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 100ms ease-out, background 0.15s ease, box-shadow 0.2s ease;
+      will-change: transform;
     }
-    .hold:hover { transform: translateY(-1px); }
-    .hold:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    /* Feedback on press, not release */
+    .hold:active:not(:disabled) { transform: scale(0.97); }
+    .hold:disabled { opacity: 0.42; cursor: not-allowed; }
     .hold.armed {
-      background: var(--lamp);
+      background: var(--accent);
       color: var(--ink-dark);
       border-color: transparent;
-      box-shadow:
-        0 0 0 6px rgba(242, 178, 48, 0.28),
-        0 12px 30px rgba(0, 0, 0, 0.28);
+      box-shadow: 0 0 0 6px rgba(232, 180, 56, 0.22);
+      transform: scale(1.01);
     }
+    .hold.armed:active { transform: scale(0.98); }
 
     .hold-hint {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
-      color: rgba(243, 235, 224, 0.72);
-      text-shadow: 0 1px 8px rgba(0,0,0,0.55);
+      color: var(--ink-faint);
     }
 
     .secondary {
       display: flex;
-      gap: 1rem;
+      gap: 1.1rem;
       align-items: center;
     }
-
     .linkish {
       appearance: none;
       border: 0;
       background: transparent;
-      color: rgba(242, 236, 224, 0.72);
+      color: var(--ink-soft);
       font: inherit;
       font-size: 0.8rem;
-      font-weight: 700;
+      font-weight: 650;
       text-decoration: underline;
       text-underline-offset: 0.18em;
       cursor: pointer;
-      padding: 0.2rem;
+      padding: 0.25rem;
+      border-radius: 0.35rem;
+      transition: color 0.15s ease, transform 100ms ease-out;
     }
-    .linkish:hover { color: var(--lamp); }
+    .linkish:active { transform: scale(0.97); }
+    .linkish:hover { color: var(--accent); }
 
-    /* ————— Overlays ————— */
+    /* ——— Overlays / sheets ——— */
     .scrim {
       position: fixed;
       inset: 0;
       z-index: 5;
-      background: rgba(29, 36, 40, 0.38);
+      background: rgba(8, 10, 12, 0.45);
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.28s var(--spring);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
     }
     .scrim.show { opacity: 1; pointer-events: auto; }
 
     .sheet, .log {
       position: fixed;
       z-index: 6;
-      background: #1d2122;
-      color: var(--paper);
-      box-shadow: 0 -16px 48px rgba(29, 36, 40, 0.3);
-      transition: transform 0.28s ease;
+      background: rgba(28, 30, 36, 0.92);
+      color: var(--ink);
+      backdrop-filter: blur(28px) saturate(170%);
+      -webkit-backdrop-filter: blur(28px) saturate(170%);
+      box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--glass-edge);
+      /* presentation-value driven via --sheet-y */
+      will-change: transform;
     }
 
     .sheet {
       left: 50%;
       bottom: 0;
-      width: min(100%, 420px);
-      transform: translate(-50%, 110%);
-      border-radius: 1rem 1rem 0 0;
-      padding: 0.9rem 0.9rem 1.1rem;
+      width: min(100%, 440px);
+      --sheet-y: 110%;
+      transform: translate(-50%, var(--sheet-y));
+      border-radius: 1.25rem 1.25rem 0 0;
+      padding: 0.45rem 0.95rem calc(1.1rem + var(--safe-b));
       display: grid;
       gap: 0.55rem;
+      transition: transform 0.34s var(--spring);
+      touch-action: none;
     }
-    .sheet.open { transform: translate(-50%, 0); }
+    .sheet.open { --sheet-y: 0%; }
+    .sheet.dragging { transition: none; }
+
+    .sheet-handle {
+      width: 2.4rem;
+      height: 0.3rem;
+      margin: 0.25rem auto 0.15rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+    }
 
     .sheet textarea {
       width: 100%;
-      min-height: 5rem;
+      min-height: 5.5rem;
       resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 0.75rem;
-      background: rgba(255,255,255,0.04);
-      color: var(--paper);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0.9rem;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--ink);
       font: inherit;
       font-weight: 600;
-      padding: 0.75rem 0.85rem;
+      padding: 0.8rem 0.9rem;
       outline: none;
     }
-    .sheet textarea:focus { border-color: rgba(242, 178, 48, 0.8); }
+    .sheet textarea:focus {
+      border-color: rgba(232, 180, 56, 0.7);
+      box-shadow: 0 0 0 4px rgba(232, 180, 56, 0.15);
+    }
 
     .sheet-actions {
       display: flex;
@@ -492,14 +403,16 @@
     .btn {
       appearance: none;
       border: 0;
-      border-radius: 0.65rem;
-      padding: 0.55rem 0.9rem;
+      border-radius: 0.75rem;
+      padding: 0.6rem 0.95rem;
       font: inherit;
       font-weight: 700;
       cursor: pointer;
+      transition: transform 100ms ease-out, opacity 0.15s ease;
     }
+    .btn:active { transform: scale(0.97); }
     .btn.ghost { background: transparent; color: var(--ink-soft); }
-    .btn.solid { background: var(--lamp); color: var(--ink-dark); }
+    .btn.solid { background: var(--accent); color: var(--ink-dark); }
     .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
     .log {
@@ -507,32 +420,41 @@
       right: 0;
       width: min(100%, 360px);
       height: 100%;
-      transform: translateX(105%);
-      padding: 1rem 1rem 1.25rem;
+      --log-x: 105%;
+      transform: translateX(var(--log-x));
+      padding: calc(1rem + var(--safe-t)) 1rem calc(1.25rem + var(--safe-b));
       display: grid;
       grid-template-rows: auto 1fr;
-      border-left: 1px solid var(--line);
+      border-left: 1px solid var(--glass-edge);
+      border-radius: 1.1rem 0 0 1.1rem;
+      transition: transform 0.36s var(--spring);
     }
-    .log.open { transform: translateX(0); }
+    .log.open { --log-x: 0%; }
 
     .log h2 {
       margin: 0 2rem 0.75rem 0;
-      font-family: var(--font-display);
-      font-size: 1.3rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
     }
-
     .log-close {
       position: absolute;
-      top: 0.75rem;
+      top: calc(0.75rem + var(--safe-t));
       right: 0.75rem;
       appearance: none;
       border: 0;
-      background: transparent;
-      color: var(--paper);
-      font-size: 1.4rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      font-size: 1.2rem;
       cursor: pointer;
       line-height: 1;
+      transition: transform 100ms ease-out;
     }
+    .log-close:active { transform: scale(0.94); }
 
     .log-stream { overflow: auto; padding-right: 0.2rem; }
     .log-stream .you, .log-stream .duck {
@@ -543,73 +465,70 @@
       font-weight: 600;
       font-size: 0.95rem;
     }
-    .log-stream .you { color: var(--paper); }
+    .log-stream .you { color: var(--ink); }
     .log-stream .duck { color: var(--ink-soft); font-weight: 500; }
     .log-stream .label {
       display: block;
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       opacity: 0.55;
       margin-bottom: 0.15rem;
     }
 
-    @keyframes rise {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes material-in {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes duck-in {
-      from { opacity: 0; transform: translateY(18px) scale(0.96); }
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes blink { 50% { opacity: 0; } }
 
-    @media (max-width: 720px) {
-      .world {
-        grid-template-columns: minmax(3.75rem, 24%) minmax(0, 1fr);
-        --stream-max: min(26vh, 9.5rem);
+    @media (max-width: 640px) {
+      .world { padding-inline: 0.7rem; gap: 0.45rem; }
+      .duck-frame {
+        width: min(92vw, 360px);
+        height: min(42dvh, 340px);
       }
-      .top { padding: 0.85rem 0.85rem 0.1rem 0.15rem; }
-      .brand { font-size: clamp(1.65rem, 7.5vw, 2.15rem); }
-      .duck {
-        width: min(98%, 340px);
-        max-height: min(46vh, 340px);
-      }
-      body.is-streaming .duck {
-        width: min(90%, 270px);
-        max-height: min(36vh, 270px);
-      }
-      .words { padding-inline: 0.55rem 0.7rem; }
-      .words-panel { padding: 0.7rem 0.8rem; }
-      .hold { min-height: 3.25rem; }
-      :root { --bg-pos: 86% 40%; }
-    }
-
-    @media (min-width: 1100px) {
-      .duck {
-        width: min(94%, 580px);
-        max-height: min(64vh, 580px);
-      }
-      body.is-streaming .duck {
-        width: min(86%, 480px);
-        max-height: min(52vh, 480px);
-      }
-      .words { max-width: 40rem; }
+      .chrome { padding: 0.6rem 0.75rem; border-radius: 1rem; }
+      .brand { font-size: 1.25rem; }
+      --stream-max: min(24vh, 9rem);
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .duck .duck__all { animation: none; }
-      .duck { animation: none; transition: none; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .duck-frame { transition: none; }
       .nudge.streaming::after { animation: none; }
-      body.is-streaming .duck,
-      .words-panel { transition: none; }
+      body.is-streaming .duck-frame { transform: none; }
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .chrome, .words-panel, .dock, .sheet, .log {
+        background: #1c1f25;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+      .scrim { backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+
+    @media (prefers-contrast: more) {
+      .chrome, .words-panel, .dock, .sheet, .log {
+        background: #121418;
+        border-color: rgba(245, 242, 234, 0.45);
+      }
+      .hold { border-color: rgba(245, 242, 234, 0.55); }
     }
   </style>
 </head>
 <body>
   <div class="world">
-    <div class="lamp-zone" aria-hidden="true"></div>
-    <header class="top">
+    <header class="chrome">
       <div class="brand-block">
         <h1 class="brand">Rubber Duck</h1>
         <p class="mode">Explain</p>
@@ -621,51 +540,14 @@
     </header>
 
     <main class="duck-stage" aria-label="Rubber duck">
-      <svg class="duck" id="duck" data-state="base" viewBox="0 0 220 200" role="img" aria-label="Rubber duck">
-        <g class="duck__all">
-          <ellipse class="duck__shadow" cx="110" cy="176" rx="72" ry="10" fill="rgba(8,12,10,0.45)"/>
-          <ellipse class="duck__ripple" cx="110" cy="180" rx="92" ry="12"/>
-
-          <g class="duck__wing-l">
-            <path d="M 52 108 C 30 112 22 132 34 148 C 46 160 66 158 74 146 C 80 136 74 118 62 110 Z"
-              fill="var(--duck-deep)"/>
-            <path d="M 50 112 C 34 116 30 132 40 144" fill="none" stroke="rgba(29,36,40,0.2)" stroke-width="3" stroke-linecap="round"/>
-          </g>
-          <g class="duck__wing-r">
-            <path d="M 168 108 C 190 112 198 132 186 148 C 174 160 154 158 146 146 C 140 136 146 118 158 110 Z"
-              fill="var(--duck-deep)"/>
-            <path d="M 170 112 C 186 116 190 132 180 144" fill="none" stroke="rgba(29,36,40,0.2)" stroke-width="3" stroke-linecap="round"/>
-          </g>
-
-          <ellipse class="duck__body" cx="110" cy="138" rx="74" ry="48" fill="var(--duck)"/>
-          <path d="M 110 90 C 60 90 38 116 38 138 C 38 164 70 186 110 186 C 150 186 182 164 182 138 C 182 116 160 90 110 90 Z"
-            fill="var(--duck)"/>
-          <path d="M 52 150 C 62 172 86 184 110 184 C 140 184 162 168 170 150 C 150 172 70 172 52 150 Z" fill="var(--duck-deep)" opacity="0.55"/>
-
-          <g class="duck__head">
-            <circle cx="128" cy="64" r="42" fill="var(--duck)"/>
-            <path d="M 128 22 C 100 22 86 44 86 64 C 86 88 106 104 128 104 C 150 104 170 88 170 64 C 170 44 156 22 128 22 Z" fill="var(--duck)"/>
-            <g class="duck__beak">
-              <path d="M 168 66 L 196 74 C 200 75 200 81 196 83 L 168 88 Z" fill="var(--beak)"/>
-              <path d="M 168 66 L 196 74 C 200 75 200 77 198 79 L 168 74 Z" fill="var(--beak-deep)" opacity="0.5"/>
-            </g>
-            <circle class="duck__eye" cx="146" cy="54" r="7" fill="#1d2428"/>
-            <circle cx="148.5" cy="51.5" r="2.2" fill="#f2ece0" class="duck__eye-shine"/>
-            <path class="duck__brow" d="M 138 42 Q 148 36 158 44" fill="none" stroke="#1d2428" stroke-width="3.5" stroke-linecap="round"/>
-            <ellipse cx="110" cy="78" rx="14" ry="7" fill="rgba(255,255,255,0.28)"/>
-          </g>
-
-          <g class="duck__sparkle duck__sparkle--a">
-            <path d="M 60 40 l 5 12 l 12 5 l -12 5 l -5 12 l -5 -12 l -12 -5 l 12 -5 Z" fill="var(--duck-deep)"/>
-          </g>
-          <g class="duck__sparkle duck__sparkle--b">
-            <path d="M 186 30 l 4 9 l 9 4 l -9 4 l -4 9 l -4 -9 l -9 -4 l 9 -4 Z" fill="var(--beak)"/>
-          </g>
-          <g class="duck__sparkle duck__sparkle--c">
-            <path d="M 118 8 l 4 9 l 9 4 l -9 4 l -4 9 l -4 -9 l -9 -4 l 9 -4 Z" fill="var(--duck-deep)"/>
-          </g>
-        </g>
-      </svg>
+      <div class="duck-frame" id="duckFrame" role="img" aria-label="Rubber duck">
+        <img id="poster-base" src="/assets/duck-base-poster.jpg" alt="" />
+        <img id="poster-thinking" src="/assets/duck-thinking-poster.jpg" alt="" />
+        <img id="poster-excited" src="/assets/duck-excited-poster.jpg" alt="" />
+        <img id="anim-base" alt="" />
+        <img id="anim-thinking" alt="" />
+        <img id="anim-excited" alt="" />
+      </div>
     </main>
 
     <section class="words" aria-live="polite">
@@ -676,7 +558,7 @@
       </div>
     </section>
 
-    <footer class="bottom">
+    <footer class="dock">
       <button type="button" class="hold" id="holdBtn">Hold to explain</button>
       <p class="hold-hint" id="holdHint">Press and hold · Space works too</p>
       <div class="secondary">
@@ -695,6 +577,7 @@
   </aside>
 
   <div class="sheet" id="typeSheet" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
     <textarea id="textInput" rows="4" placeholder="Explain what’s happening in the code…"></textarea>
     <div class="sheet-actions">
       <button type="button" class="btn ghost" id="typeClose">Cancel</button>
@@ -704,6 +587,7 @@
 
   <script>
     const STATES = ["base", "thinking", "excited"];
+    const ANIM_MS = { base: 1000, thinking: 1600, excited: 1000 };
 
     const holdBtn = document.getElementById("holdBtn");
     const holdHint = document.getElementById("holdHint");
@@ -712,14 +596,15 @@
     const invite = document.getElementById("invite");
     const youLine = document.getElementById("youLine");
     const nudgeLine = document.getElementById("nudgeLine");
+    const wordsPanel = document.querySelector(".words-panel");
     const streamEl = document.getElementById("stream");
     const sendBtn = document.getElementById("sendBtn");
     const textInput = document.getElementById("textInput");
     const typeSheet = document.getElementById("typeSheet");
     const logEl = document.getElementById("log");
     const scrim = document.getElementById("scrim");
-    const duck = document.getElementById("duck");
 
+    let duckState = "base";
     let busy = false;
     let connected = false;
     let recognition = null;
@@ -728,12 +613,10 @@
     let speechSupported = false;
     let holdPointerId = null;
     let holdRequested = false;
+    let animTimer = null;
     let logDuckBody = null;
     let finalBuffer = "";
-    let stateAnimTimer = null;
     let nudgeRenderTimer = null;
-
-    const wordsPanel = document.querySelector(".words-panel");
 
     function setPhase(text, kind = "") {
       phaseText.textContent = text;
@@ -748,23 +631,6 @@
       if (!listening) holdBtn.disabled = busy || !speechSupported;
     }
 
-    function setDuckState(state) {
-      if (!STATES.includes(state)) return;
-      if (duck.dataset.state === state) return;
-      duck.dataset.state = state;
-      duck.classList.remove("is-transition");
-      void duck.getBoundingClientRect();
-      duck.classList.add("is-transition");
-      clearTimeout(stateAnimTimer);
-      stateAnimTimer = setTimeout(() => {
-        duck.classList.remove("is-transition");
-      }, state === "excited" ? 1350 : 850);
-    }
-
-    function hideInvite() {
-      invite.classList.add("hide");
-    }
-
     function setStreaming(on) {
       document.body.classList.toggle("is-streaming", on);
     }
@@ -772,6 +638,43 @@
     function scrollWordsToEnd() {
       if (!wordsPanel) return;
       wordsPanel.scrollTop = wordsPanel.scrollHeight;
+    }
+
+    function showPoster(state) {
+      for (const s of STATES) {
+        document.getElementById(`poster-${s}`).classList.toggle("show", s === state);
+        document.getElementById(`anim-${s}`).classList.remove("show");
+      }
+    }
+
+    function playStateAnim(state) {
+      showPoster(state);
+      const anim = document.getElementById(`anim-${state}`);
+      anim.classList.remove("show");
+      anim.removeAttribute("src");
+      void anim.offsetWidth;
+      anim.src = `/assets/duck-${state}.webp?t=${Date.now()}`;
+      anim.onload = () => {
+        document.getElementById(`poster-${state}`).classList.remove("show");
+        anim.classList.add("show");
+      };
+      clearTimeout(animTimer);
+      animTimer = setTimeout(() => {
+        anim.classList.remove("show");
+        document.getElementById(`poster-${state}`).classList.add("show");
+      }, ANIM_MS[state] + 80);
+    }
+
+    function setDuckState(state, { animate = true } = {}) {
+      if (!STATES.includes(state)) return;
+      const changed = state !== duckState;
+      duckState = state;
+      if (animate && changed) playStateAnim(state);
+      else showPoster(state);
+    }
+
+    function hideInvite() {
+      invite.classList.add("hide");
     }
 
     function setYouText(text, interim = false) {
@@ -855,9 +758,84 @@
       el.addEventListener("transitionend", done);
       if (![typeSheet, logEl].some((x) => x.classList.contains("open") && x !== el)) {
         scrim.classList.remove("show");
-        setTimeout(() => { if (!scrim.classList.contains("show")) scrim.hidden = true; }, 280);
+        setTimeout(() => { if (!scrim.classList.contains("show")) scrim.hidden = true; }, 300);
       }
     }
+
+    /* Interruptible sheet drag — presentation value + velocity handoff */
+    (function setupSheetDrag() {
+      let dragging = false;
+      let startY = 0;
+      let startSheetY = 0;
+      let lastY = 0;
+      let lastT = 0;
+      let velocity = 0;
+
+      function sheetYPx() {
+        const h = typeSheet.getBoundingClientRect().height || 1;
+        const raw = getComputedStyle(typeSheet).getPropertyValue("--sheet-y").trim();
+        if (raw.endsWith("%")) return (parseFloat(raw) / 100) * h;
+        return parseFloat(raw) || 0;
+      }
+
+      function setSheetY(px) {
+        const h = typeSheet.getBoundingClientRect().height || 1;
+        const clamped = Math.max(0, px);
+        typeSheet.style.setProperty("--sheet-y", `${(clamped / h) * 100}%`);
+      }
+
+      typeSheet.addEventListener("pointerdown", (e) => {
+        if (!typeSheet.classList.contains("open")) return;
+        if (e.target.closest("textarea, button, a")) return;
+        dragging = true;
+        typeSheet.classList.add("dragging");
+        typeSheet.setPointerCapture(e.pointerId);
+        startY = e.clientY;
+        startSheetY = sheetYPx();
+        lastY = e.clientY;
+        lastT = performance.now();
+        velocity = 0;
+      });
+
+      typeSheet.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const now = performance.now();
+        const dy = e.clientY - startY;
+        const next = startSheetY + Math.max(0, dy);
+        // rubber-band slightly above 0 is unnecessary; resist only when pulling down past settle
+        setSheetY(next);
+        const dt = Math.max(1, now - lastT);
+        velocity = ((e.clientY - lastY) / dt) * 1000;
+        lastY = e.clientY;
+        lastT = now;
+      });
+
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        typeSheet.classList.remove("dragging");
+        const h = typeSheet.getBoundingClientRect().height || 1;
+        const y = sheetYPx();
+        // Project momentum then snap (Apple-style)
+        const projected = y + (velocity / 1000) * 0.998 / (1 - 0.998);
+        const dismiss = velocity > 500 || projected > h * 0.32;
+        if (dismiss) {
+          typeSheet.style.setProperty("--sheet-y", "110%");
+          closeOverlay(typeSheet);
+          requestAnimationFrame(() => {
+            typeSheet.style.removeProperty("--sheet-y");
+          });
+        } else {
+          typeSheet.style.setProperty("--sheet-y", "0%");
+          requestAnimationFrame(() => {
+            typeSheet.style.removeProperty("--sheet-y");
+          });
+        }
+      }
+
+      typeSheet.addEventListener("pointerup", endDrag);
+      typeSheet.addEventListener("pointercancel", endDrag);
+    })();
 
     document.getElementById("typeOpen").addEventListener("click", () => {
       openOverlay(typeSheet);
@@ -880,7 +858,7 @@
       appendLogYou(trimmed);
       setNudge("");
       setBusy(true);
-      setDuckState("thinking");
+      setDuckState("thinking", { animate: true });
       setPhase("Waiting with the duck…", "waiting");
       try {
         const res = await fetch("/utterance", {
@@ -892,7 +870,7 @@
       } catch (err) {
         setPhase(`Bridge offline — ${err.message}`, "error");
         setBusy(false);
-        setDuckState("base");
+        setDuckState("base", { animate: true });
         setNudge("(Couldn’t reach the bridge.)");
       }
     }
@@ -917,7 +895,7 @@
           return;
         }
         if (type === "state") {
-          setDuckState(text || "base");
+          setDuckState(text || "base", { animate: true });
           return;
         }
         if (type === "token") {
@@ -928,7 +906,8 @@
         }
         if (type === "done") {
           finishLogDuck();
-          setDuckState(text && STATES.includes(text) ? text : "base");
+          if (text && STATES.includes(text)) setDuckState(text, { animate: true });
+          else setDuckState("base", { animate: true });
           setBusy(false);
           setPhase("The duck listens");
           return;
@@ -937,7 +916,7 @@
           finishLogDuck();
           setNudge(text || "Something went wrong");
           setBusy(false);
-          setDuckState("base");
+          setDuckState("base", { animate: true });
           setPhase("Error", "error");
         }
       };
@@ -976,13 +955,9 @@
       recognition.lang = navigator.language || "en-US";
 
       recognition.onstart = () => {
-        if (!holdRequested) {
-          recognition.stop();
-          return;
-        }
         listening = true;
+        holdRequested = false;
         finalBuffer = "";
-        duck.classList.add("is-listening");
         holdBtn.classList.add("armed");
         holdBtn.textContent = "Listening… release to send";
         setPhase("Listening", "listening");
@@ -991,11 +966,9 @@
       recognition.onend = () => {
         const wasListening = listening;
         listening = false;
-        duck.classList.remove("is-listening");
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         holdPointerId = null;
-        holdRequested = false;
         if (!busy) setPhase("The duck listens");
         if (!wasListening) return;
         const toSend = finalBuffer.trim() || youLine.textContent.trim();
@@ -1011,7 +984,6 @@
       recognition.onerror = (e) => {
         listening = false;
         holdRequested = false;
-        duck.classList.remove("is-listening");
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         if (e.error === "not-allowed") {
@@ -1034,7 +1006,7 @@
     }
 
     async function startHold(pointerId) {
-      if (busy || listening || !speechSupported) return;
+      if (busy || listening || !speechSupported || holdRequested) return;
       holdRequested = true;
       holdPointerId = pointerId ?? "keys";
       if (!(await ensureMic())) {
@@ -1042,11 +1014,14 @@
         holdPointerId = null;
         return;
       }
-      if (!holdRequested || holdPointerId !== (pointerId ?? "keys")) return;
+      if (holdPointerId == null) {
+        holdRequested = false;
+        return;
+      }
       try {
         recognition.start();
       } catch {
-        /* already started */
+        holdRequested = false;
       }
     }
 
@@ -1054,8 +1029,11 @@
       if (holdPointerId != null && pointerId != null && holdPointerId !== pointerId && holdPointerId !== "keys") {
         return;
       }
-      holdRequested = false;
-      if (!listening) return;
+      if (!listening) {
+        holdRequested = false;
+        holdPointerId = null;
+        return;
+      }
       try { recognition.stop(); } catch { /* ignore */ }
     }
 
@@ -1093,9 +1071,9 @@
       }
     });
 
+    showPoster("base");
     setupSpeech();
     connectSSE();
-    setDuckState("base");
   </script>
 </body>
 </html>
