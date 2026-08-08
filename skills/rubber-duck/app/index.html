@@ -154,13 +154,16 @@
 
     .duck-frame {
       position: relative;
-      width: min(86vw, 420px);
-      height: min(48dvh, 420px);
-      transform-origin: 50% 70%;
+      width: min(92vw, 520px);
+      height: min(54dvh, 520px);
+      transform-origin: 50% 62%;
       transition: transform 0.4s var(--spring);
-      filter: drop-shadow(0 28px 36px rgba(0, 0, 0, 0.45));
+      filter: drop-shadow(0 32px 40px rgba(0, 0, 0, 0.42));
       animation: duck-in 0.55s var(--spring) both;
       will-change: transform;
+      /* Soft-edge the WebP plate into the lamp pool — no hard photo card */
+      -webkit-mask-image: radial-gradient(ellipse 78% 74% at 50% 54%, #000 46%, rgba(0,0,0,0.55) 68%, transparent 82%);
+      mask-image: radial-gradient(ellipse 78% 74% at 50% 54%, #000 46%, rgba(0,0,0,0.55) 68%, transparent 82%);
     }
     .duck-frame img {
       position: absolute;
@@ -490,8 +493,8 @@
       :root { --stream-max: min(24vh, 9rem); }
       .world { padding-inline: 0.7rem; gap: 0.45rem; }
       .duck-frame {
-        width: min(92vw, 360px);
-        height: min(42dvh, 340px);
+        width: min(96vw, 400px);
+        height: min(46dvh, 400px);
       }
       .chrome { padding: 0.6rem 0.75rem; border-radius: 1rem; }
       .brand { font-size: 1.25rem; }
