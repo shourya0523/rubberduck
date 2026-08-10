@@ -103,6 +103,21 @@ Skill is already at `skills/rubber-duck/` (and `.github/skills/rubber-duck` for 
 
 ---
 
+## MCP (recommended for Copilot / Cursor)
+
+After install, point your host at the stdio server so wait/stream are real tools (not a 60s shell hang):
+
+```bash
+# typical user-scope path
+node ~/.copilot/skills/rubber-duck/scripts/mcp.mjs
+```
+
+Wire absolute path into Copilot `mcp-config.json` or Cursor `mcp.json` — see [skills/rubber-duck/references/mcp.md](../skills/rubber-duck/references/mcp.md).
+
+CLI fallback without MCP: `node …/bridge.mjs wait` short-polls (~3s) and prints `{"pending":true}` or the utterance JSON.
+
+---
+
 ## Where installs land
 
 | Scope / host | Location |

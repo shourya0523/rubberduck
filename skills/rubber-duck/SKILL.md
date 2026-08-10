@@ -6,7 +6,10 @@ description: >-
   architecture assumptions, or debug by teaching a rubber duck. Opens a local HTML
   UI with mic input and streams your replies so they can stay out of the IDE.
 license: MIT
-compatibility: Requires Node.js on PATH to run the local localhost bridge.
+compatibility: >-
+  Requires Node.js on PATH for the localhost bridge. Prefer MCP tools from
+  scripts/mcp.mjs when available; otherwise use short-poll CLI (never long-block).
+  Agent and browser must share the same machine (127.0.0.1).
 metadata:
   author: shourya0523
 ---
@@ -29,90 +32,116 @@ Activate when the user mentions rubber-ducking, talking to the duck, explaining 
 
 ## Locate this skill
 
-Before starting, resolve `BRIDGE` to this skill’s `scripts/bridge.mjs` (same folder tree as this `SKILL.md`):
+Resolve paths relative to this `SKILL.md`:
 
 ```bash
 # Installed via `gh skill install … --scope user`, or checked out in-repo, e.g.:
-#   ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
-#   ~/.agents/skills/rubber-duck/scripts/bridge.mjs
-#   skills/rubber-duck/scripts/bridge.mjs
-#   .github/skills/rubber-duck/scripts/bridge.mjs
-BRIDGE="$(find \
+#   ~/.copilot/skills/rubber-duck/
+#   ~/.agents/skills/rubber-duck/
+#   skills/rubber-duck/
+#   .github/skills/rubber-duck/
+SKILL_ROOT="$(find \
   "$HOME/.copilot/skills" "$HOME/.agents/skills" \
   skills .github/skills .agents/skills .claude/skills \
-  -path '*/rubber-duck/scripts/bridge.mjs' 2>/dev/null | head -n 1)"
-# Or set BRIDGE to the absolute path of scripts/bridge.mjs next to this SKILL.md.
+  -path '*/rubber-duck/SKILL.md' 2>/dev/null | head -n 1 | xargs dirname)"
+BRIDGE="$SKILL_ROOT/scripts/bridge.mjs"
+MCP="$SKILL_ROOT/scripts/mcp.mjs"
 ```
 
-All commands below use `"$BRIDGE"`. The bridge serves HTML/assets from its own skill directory, so it works no matter which project is open.
+All commands below use `"$BRIDGE"` / `"$MCP"`. The bridge serves HTML/assets from its skill directory.
+
+## Hard rules (universal)
+
+1. **Same host:** Agent process, bridge, and browser must share localhost. Cloud agents cannot hear a desk mic without a tunnel you set up explicitly.
+2. **Never long-block** on wait. Default poll is ~3s. If you see `{"pending":true}`, poll again — do not run a 60s shell wait (Copilot/Cursor will time out).
+3. Prefer **MCP tools** when configured; fall back to the short-poll CLI.
 
 ## Setup (once per session)
+
+### Preferred — MCP
+
+If MCP server `rubber-duck` is connected (see `references/mcp.md`):
+
+1. Call **`duck_ensure`** → get URL.
+2. Open that URL in the user’s browser (Chrome/Edge for mic).
+3. Enter the conversation loop using MCP tools only.
+
+### Fallback — CLI
 
 ```bash
 node "$BRIDGE"
 ```
 
-The process prints a URL like `http://127.0.0.1:3847/`. Open it in the user’s browser (Chrome or Edge recommended for speech recognition). Keep the bridge running for the whole session.
+Prints `http://127.0.0.1:3847/`. Open it. Keep the process running.
 
-Health check: `curl -s http://127.0.0.1:3847/health`
+Health: `node "$BRIDGE" health` or `curl -s http://127.0.0.1:3847/health`
 
-If port `3847` is busy: `RUBBERDUCK_PORT=3848 node "$BRIDGE"`
+Alternate port: `RUBBERDUCK_PORT=3848 node "$BRIDGE"`
 
 ## Conversation loop
 
-Repeat until the user ends the session:
+Repeat until the user ends the session.
 
-1. **Wait** for the next utterance (blocks until the human speaks or types):
+### MCP path
+
+1. **`duck_wait`** (optional `{ "ms": 3000 }`).  
+   - If `pending: true` → call `duck_wait` again (or do brief repo work, then wait).  
+   - If utterance JSON → continue.
+2. **`duck_say`** `{ "state": "thinking" }`
+3. **Reason** with repo tools in the open project.
+4. **`duck_token`** `{ "text": "…" }` — one phrase/sentence per call, repeatedly.
+5. **`duck_done`** `{ "state": "excited" }` or `{ "state": "base" }`
+
+### CLI path (short-poll)
+
+1. **Wait** (agent-safe — exits 0 with pending JSON if empty):
 
    ```bash
    node "$BRIDGE" wait
+   # optional: node "$BRIDGE" wait --ms 2000
    ```
 
-   Output is JSON: `{"id":"...","text":"...","ts":...}`.
+   - `{"pending":true,"waitMs":…}` → poll again.  
+   - `{"id":"…","text":"…","ts":…}` → continue.
 
-2. **Signal thinking** so the duck pose updates:
+2. **Thinking:**
 
    ```bash
    node "$BRIDGE" say --state thinking
    ```
 
-3. **Reason** with repo tools (search, read files, git) in the **currently open project**. Stay focused on what they said.
+3. **Reason** with repo tools.
 
-4. **Stream** the reply in small chunks (one phrase or sentence at a time):
+4. **Stream** small chunks:
 
    ```bash
    node "$BRIDGE" token "First thought…"
    node "$BRIDGE" token " Follow-up…"
    ```
 
-5. **Finish** the turn (unlocks the mic; optional excited pose on insight):
+5. **Finish:**
 
    ```bash
    node "$BRIDGE" done --state excited
+   # or: node "$BRIDGE" done --state base
    ```
 
-   Or idle: `node "$BRIDGE" done --state base`
+Only use `node "$BRIDGE" wait --block` if the host is known to allow long shell tools; never default to it.
 
 ### HTTP alternative
 
-Same protocol without CLI:
-
 | Method | Path | Body / notes |
 |--------|------|----------------|
-| GET | `/pending?wait=ms` | Long-poll next utterance JSON |
-| POST | `/stream` | JSON `{"type":"state","text":"thinking"}` |
-| POST | `/stream` | JSON `{"type":"token","text":"..."}` |
-| POST | `/stream` | JSON `{"type":"done","text":"excited"}` (text = optional end state) |
-| POST | `/utterance` | Used by the browser only |
+| GET | `/pending?wait=ms` | Short-poll; **204** if empty |
+| POST | `/stream` | `{"type":"state\|token\|done","text":"…"}` |
+| POST | `/utterance` | Browser only |
 
 Duck states: `base` | `thinking` | `excited`.
 
-Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them (safe to omit).
-
 ## Duck
 
-The duck is WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + poster JPEGs). The UI switches posters/animations on `base` | `thinking` | `excited`. Background is a calm atmospheric material (warm light pool) — not a photo — so translucent chrome stays legible.
+WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + poster JPEGs). UI switches on `base` | `thinking` | `excited`. Background is a calm atmospheric material (warm light pool).
 
 ## Ending
 
-Tell the user they can close the browser tab. Stop the bridge process when done.
+Tell the user they can close the browser tab. Stop the bridge process when done (MCP-spawned bridge may keep running until they stop it).

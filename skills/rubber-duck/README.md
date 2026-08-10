@@ -24,6 +24,17 @@ Requires Node.js. Prefer Chrome/Edge for the mic.
 
 Then: Agent chat → **Start a rubber duck session**.
 
+## Universal listen path
+
+Two layers (use both when you can):
+
+1. **Skill** (`SKILL.md`) — Socratic loop, short-poll rules  
+2. **MCP** (`scripts/mcp.mjs`) — `duck_wait` / `duck_token` / … without hanging the shell  
+
+CLI fallback is short-poll: `node scripts/bridge.mjs wait` → `{"pending":true}` or utterance JSON (exit 0).
+
+MCP config: **[references/mcp.md](references/mcp.md)**.
+
 ## Manual bridge
 
 ```bash
