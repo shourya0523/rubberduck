@@ -983,21 +983,30 @@
       recognition.lang = navigator.language || "en-US";
 
       recognition.onstart = () => {
+        // Released during mic/start handshake — abort cleanly
+        if (!holdRequested) {
+          try { recognition.abort(); } catch { /* ignore */ }
+          return;
+        }
         listening = true;
-        holdRequested = false;
         finalBuffer = "";
         holdBtn.classList.add("armed");
         holdBtn.textContent = "Listening… release to send";
         setPhase("Listening", "listening");
+        if (typeof holdPointerId === "number") {
+          try { holdBtn.setPointerCapture(holdPointerId); } catch { /* ignore */ }
+        }
       };
 
       recognition.onend = () => {
         const wasListening = listening;
         listening = false;
+        holdRequested = false;
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         holdPointerId = null;
-        if (!busy) setPhase("The duck listens");
+        // Don't clobber a mic error phase set by onerror
+        if (!busy && !phaseDot.classList.contains("error")) setPhase("The duck listens");
         if (!wasListening) return;
         const toSend = finalBuffer.trim() || youLine.textContent.trim();
         finalBuffer = "";
@@ -1010,14 +1019,20 @@
       };
 
       recognition.onerror = (e) => {
+        const hadListen = listening;
         listening = false;
         holdRequested = false;
+        holdPointerId = null;
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         if (e.error === "not-allowed") {
           setPhase("Mic permission denied — type instead", "error");
+        } else if (e.error === "audio-capture") {
+          setPhase("Mic capture failed — type instead", "error");
         } else if (e.error !== "aborted" && e.error !== "no-speech") {
           setPhase(`Mic: ${e.error}`, "error");
+        } else if (!hadListen && !busy) {
+          setPhase("The duck listens");
         }
       };
 
@@ -1038,18 +1053,19 @@
       holdRequested = true;
       holdPointerId = pointerId ?? "keys";
       if (!(await ensureMic())) {
-        holdRequested = false;
-        holdPointerId = null;
+        if (holdPointerId === (pointerId ?? "keys")) {
+          holdRequested = false;
+          holdPointerId = null;
+        }
         return;
       }
-      if (holdPointerId == null) {
-        holdRequested = false;
-        return;
-      }
+      // User released while awaiting mic permission
+      if (!holdRequested || holdPointerId !== (pointerId ?? "keys")) return;
       try {
         recognition.start();
       } catch {
         holdRequested = false;
+        holdPointerId = null;
       }
     }
 
@@ -1058,22 +1074,27 @@
         return;
       }
       if (!listening) {
+        // Cancel pending start (explicit release before recognition.onstart)
         holdRequested = false;
         holdPointerId = null;
         return;
       }
+      holdRequested = false;
       try { recognition.stop(); } catch { /* ignore */ }
     }
 
     holdBtn.addEventListener("pointerdown", (e) => {
       if (e.button != null && e.button !== 0) return;
       e.preventDefault();
-      holdBtn.setPointerCapture?.(e.pointerId);
+      // Capture after recognition starts — early capture can fire lostpointercapture
+      // during getUserMedia and cancel the pending hold.
       startHold(e.pointerId);
     });
     holdBtn.addEventListener("pointerup", (e) => stopHold(e.pointerId));
     holdBtn.addEventListener("pointercancel", (e) => stopHold(e.pointerId));
-    holdBtn.addEventListener("lostpointercapture", (e) => stopHold(e.pointerId));
+    holdBtn.addEventListener("lostpointercapture", (e) => {
+      if (listening) stopHold(e.pointerId);
+    });
 
     window.addEventListener("keydown", (e) => {
       if (e.code !== "Space" || e.repeat) return;
