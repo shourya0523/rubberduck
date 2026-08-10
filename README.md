@@ -71,7 +71,7 @@ Env: `RUBBERDUCK_HOST`, `RUBBERDUCK_PORT`, `RUBBERDUCK_WAIT_MS`, `RUBBERDUCK_NO_
 
 ## Duck
 
-WebP state loops (`duck-base|thinking|excited.webp` + posters) with an atmospheric warm-light background.
+Duck OS UI: hand-drawn CSS pixel art. State changes are CSS-driven (`data-state="base|thinking|excited"`), with listening shown as a separate UI phase.
 
 ## Layout
 
@@ -95,3 +95,4 @@ Do not commit `.agents/skills` / `.claude/skills` — those are **install destin
 - Streaming agent replies over SSE
 - Short-poll wait (never rely on long-blocking shell waits)
 - Agent and browser share localhost
+- No runtime CDN — duck is bundled CSS pixel art

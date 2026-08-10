@@ -84,7 +84,7 @@ Rules:
 
 ## Duck
 
-WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). States: `base` | `thinking` | `excited`.
+Bundled CSS pixel-art duck with `base`, `thinking`, and `excited` state reactions. Listening is a separate UI phase. Duck OS uses a high-contrast retro terminal treatment; character bubbles supplement status text.
 
 ## Ending
 

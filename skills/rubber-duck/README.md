@@ -34,4 +34,4 @@ node scripts/bridge.mjs setup
 
 ## Duck
 
-WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). Atmospheric warm-light background — no photo backdrop.
+Duck OS UI: bundled CSS pixel-art duck with base, thinking, excited, and listening reactions. Pixel speech bubbles add character without replacing session status or response text.
