@@ -68,7 +68,7 @@ Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3
 
 ## Duck
 
-The duck is hand-drawn inline SVG + CSS — no image files, no WebP. State changes are CSS-driven (`data-state="base|thinking|excited"`).
+The duck is hand-drawn CSS pixel art. State changes are CSS-driven (`data-state="base|thinking|excited"`), with listening shown as a separate UI phase.
 
 ## Layout
 
@@ -86,4 +86,4 @@ Do not commit `.agents/skills` / `.claude/skills` — those are **install destin
 
 - Speech recognition in the HTML (Chrome/Edge)
 - Streaming agent replies over SSE
-- No runtime CDN or media files — duck is inline SVG
+- No runtime CDN or media files — duck is bundled CSS pixel art

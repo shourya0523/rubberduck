@@ -34,4 +34,4 @@ Open `http://127.0.0.1:3847/`.
 
 ## Duck
 
-WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). The UI uses an atmospheric material background (warm light pool over graphite) so translucent chrome stays clear — no photo backdrop.
+The Duck OS UI uses a bundled CSS pixel-art duck with base, thinking, excited, and listening reactions. Pixel speech bubbles add character without replacing the session status or response text.

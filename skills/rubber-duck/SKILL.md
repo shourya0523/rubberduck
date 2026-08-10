@@ -111,7 +111,7 @@ Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them
 
 ## Duck
 
-The duck is WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + poster JPEGs). The UI switches posters/animations on `base` | `thinking` | `excited`. Background is a calm atmospheric material (warm light pool) — not a photo — so translucent chrome stays legible.
+The duck is a bundled CSS pixel-art character with `base`, `thinking`, and `excited` state reactions. Listening is represented independently through the UI phase. The Duck OS interface uses a high-contrast retro developer-terminal treatment, and character bubbles supplement rather than replace status text.
 
 ## Ending
 
