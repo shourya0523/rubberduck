@@ -1005,7 +1005,8 @@
         holdBtn.classList.remove("armed");
         holdBtn.textContent = "Hold to explain";
         holdPointerId = null;
-        if (!busy) setPhase("The duck listens");
+        // Don't clobber a mic error phase set by onerror
+        if (!busy && !phaseDot.classList.contains("error")) setPhase("The duck listens");
         if (!wasListening) return;
         const toSend = finalBuffer.trim() || youLine.textContent.trim();
         finalBuffer = "";
@@ -1018,6 +1019,7 @@
       };
 
       recognition.onerror = (e) => {
+        const hadListen = listening;
         listening = false;
         holdRequested = false;
         holdPointerId = null;
@@ -1025,8 +1027,12 @@
         holdBtn.textContent = "Hold to explain";
         if (e.error === "not-allowed") {
           setPhase("Mic permission denied — type instead", "error");
+        } else if (e.error === "audio-capture") {
+          setPhase("Mic capture failed — type instead", "error");
         } else if (e.error !== "aborted" && e.error !== "no-speech") {
           setPhase(`Mic: ${e.error}`, "error");
+        } else if (!hadListen && !busy) {
+          setPhase("The duck listens");
         }
       };
 
