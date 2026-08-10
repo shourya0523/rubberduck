@@ -22,27 +22,16 @@ cp -R . ~/.agents/skills/rubber-duck
 
 Requires Node.js. Prefer Chrome/Edge for the mic.
 
-Then: Agent chat → **Start a rubber duck session**.
+Then: Agent chat → **Start a rubber duck session**. The skill runs **`node scripts/setup.mjs`** once — starts bridge, opens UI, wires MCP. No manual server/MCP steps.
 
-## Universal listen path
-
-Two layers (use both when you can):
-
-1. **Skill** (`SKILL.md`) — Socratic loop, short-poll rules  
-2. **MCP** (`scripts/mcp.mjs`) — `duck_wait` / `duck_token` / … without hanging the shell  
-
-CLI fallback is short-poll: `node scripts/bridge.mjs wait` → `{"pending":true}` or utterance JSON (exit 0).
-
-MCP config: **[references/mcp.md](references/mcp.md)**.
-
-## Manual bridge
+## Manual setup (optional)
 
 ```bash
-node scripts/bridge.mjs
+node scripts/setup.mjs
+# or
+node scripts/bridge.mjs setup
 ```
-
-Open `http://127.0.0.1:3847/`.
 
 ## Duck
 
-WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). The UI uses an atmospheric material background (warm light pool over graphite) so translucent chrome stays clear — no photo backdrop.
+WebP state loops in `assets/` (`duck-base|thinking|excited.webp` + posters). Atmospheric warm-light background — no photo backdrop.

@@ -31,45 +31,43 @@ Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
 
 1. Reload IDE → Copilot/Cursor **Agent** chat  
 2. Say: **Start a rubber duck session**  
-3. Open `http://127.0.0.1:3847/` in Chrome or Edge  
+3. Agent runs `node scripts/setup.mjs` (bridge + browser + MCP)  
 4. Talk or type to the duck  
 
 ## Manual run (no agent)
 
 ```bash
-node skills/rubber-duck/scripts/bridge.mjs
+node skills/rubber-duck/scripts/setup.mjs
 ```
 
 ## How it fits together
 
-1. **Skill** (`SKILL.md`) — when/how to rubber-duck (Socratic loop).
-2. **Bridge** (`scripts/bridge.mjs`) — localhost UI + SSE relay.
-3. **MCP** (`scripts/mcp.mjs`) — short-poll `duck_wait` + stream tools for Copilot/Cursor (no 60s shell hang).
-4. You speak or type; the agent polls for utterances, reasons with repo tools, streams tokens back.
+1. **`setup.mjs`** — one-shot: start bridge, open UI, wire MCP configs.  
+2. **Skill** (`SKILL.md`) — Socratic loop after setup.  
+3. **Bridge / MCP** — short-poll wait + stream tokens (no 60s shell hang).  
 
 ```text
-You (mic) → HTML → POST /utterance → agent duck_wait / wait (short-poll)
-agent → duck_token / POST /stream → SSE → HTML (live)
+setup → bridge + browser + MCP
+You (mic) → HTML → agent duck_wait / wait (short-poll)
+agent → duck_token / stream → SSE → HTML
 ```
 
 Same-host only: agent + bridge + browser on one machine (or an explicit tunnel).
 
-MCP wiring: [skills/rubber-duck/references/mcp.md](skills/rubber-duck/references/mcp.md).
-
 ## Agent CLI cheatsheet
 
 ```bash
-BRIDGE=~/.copilot/skills/rubber-duck/scripts/bridge.mjs   # after --scope user
-# or: BRIDGE=skills/rubber-duck/scripts/bridge.mjs
+cd ~/.copilot/skills/rubber-duck   # after --scope user
+# or: cd skills/rubber-duck
 
-node "$BRIDGE"
-node "$BRIDGE" wait                 # ~3s poll; {"pending":true} or utterance
-node "$BRIDGE" say --state thinking
-node "$BRIDGE" token "What happens if that map is empty?"
-node "$BRIDGE" done --state excited
+node scripts/setup.mjs
+node scripts/bridge.mjs wait
+node scripts/bridge.mjs say --state thinking
+node scripts/bridge.mjs token "What happens if that map is empty?"
+node scripts/bridge.mjs done --state excited
 ```
 
-Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`), `RUBBERDUCK_WAIT_MS` (default `3000`).
+Env: `RUBBERDUCK_HOST`, `RUBBERDUCK_PORT`, `RUBBERDUCK_WAIT_MS`, `RUBBERDUCK_NO_OPEN=1`.
 
 ## Duck
 
@@ -79,9 +77,10 @@ WebP state loops (`duck-base|thinking|excited.webp` + posters) with an atmospher
 
 ```text
 skills/rubber-duck/              # canonical (gh skill install + publish)
+  scripts/setup.mjs              # one-shot: bridge + browser + MCP
   scripts/bridge.mjs             # HTTP + short-poll CLI
   scripts/mcp.mjs                # stdio MCP tools
-  references/mcp.md              # Copilot / Cursor MCP config
+  references/mcp.md              # MCP notes (setup wires configs)
 scripts/install.sh               # multi-pathway installer
 docs/INSTALL.md                  # install + publish guide
 .github/skills/rubber-duck → …   # Copilot project discovery when cloning this repo

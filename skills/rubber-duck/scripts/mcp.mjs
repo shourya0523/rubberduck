@@ -1,43 +1,25 @@
 #!/usr/bin/env node
 /**
  * Rubber Duck MCP server (stdio, zero-dep).
- * Exposes short-poll wait + stream tools over Model Context Protocol so
- * Copilot / Cursor / Claude can drive the local duck bridge without hanging
- * a shell on a 60s wait.
- *
- * Configure (example Copilot / Cursor mcp.json):
- *   {
- *     "mcpServers": {
- *       "rubber-duck": {
- *         "command": "node",
- *         "args": ["/absolute/path/to/skills/rubber-duck/scripts/mcp.mjs"],
- *         "tools": ["*"]
- *       }
- *     }
- *   }
- *
- * Start the HTTP bridge first (or call duck_ensure). Browser must share
- * the same host as this process (localhost).
+ * Prefer running `node scripts/setup.mjs` once from the skill — that wires
+ * this server into Copilot/Cursor and starts the bridge.
  */
 
-import { spawn } from "node:child_process";
-import path from "node:path";
 import readline from "node:readline";
-import { fileURLToPath } from "node:url";
+import {
+  BASE,
+  BRIDGE_PATH,
+  DEFAULT_WAIT_MS,
+  bridgeHealth,
+  ensureBridge,
+  fetchJson,
+  postStream,
+  setupSession,
+} from "./lib.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const BRIDGE_PATH = path.join(__dirname, "bridge.mjs");
-const HOST = process.env.RUBBERDUCK_HOST || "127.0.0.1";
-const PORT = Number(process.env.RUBBERDUCK_PORT || 3847);
-const BASE = `http://${HOST}:${PORT}`;
-const DEFAULT_WAIT_MS = Number(process.env.RUBBERDUCK_WAIT_MS || 3000);
 const PROTOCOL_VERSION = "2025-03-26";
 const SERVER_INFO = { name: "rubber-duck", version: "0.4.0" };
-
 const STATES = new Set(["base", "thinking", "excited"]);
-
-/** @type {import('node:child_process').ChildProcess | null} */
-let bridgeChild = null;
 
 function log(...args) {
   console.error("[rubber-duck-mcp]", ...args);
@@ -59,81 +41,30 @@ function errText(message) {
   };
 }
 
-async function fetchJson(pathname, options = {}) {
-  const res = await fetch(`${BASE}${pathname}`, options);
-  if (res.status === 204) return { status: 204, data: null };
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = { raw: text };
-  }
-  return { status: res.status, ok: res.ok, data };
-}
-
-async function bridgeHealth() {
-  try {
-    const { ok, data } = await fetchJson("/health");
-    return ok ? data : null;
-  } catch {
-    return null;
-  }
-}
-
-async function ensureBridge() {
-  const health = await bridgeHealth();
-  if (health?.ok) {
-    return { started: false, url: `${BASE}/`, health };
-  }
-
-  if (bridgeChild && !bridgeChild.killed) {
-    for (let i = 0; i < 20; i++) {
-      await sleep(100);
-      const h = await bridgeHealth();
-      if (h?.ok) return { started: true, url: `${BASE}/`, health: h };
-    }
-  }
-
-  bridgeChild = spawn(process.execPath, [BRIDGE_PATH, "serve"], {
-    detached: true,
-    stdio: "ignore",
-    env: { ...process.env, RUBBERDUCK_HOST: HOST, RUBBERDUCK_PORT: String(PORT) },
-  });
-  bridgeChild.unref();
-
-  for (let i = 0; i < 40; i++) {
-    await sleep(100);
-    const h = await bridgeHealth();
-    if (h?.ok) return { started: true, url: `${BASE}/`, health: h };
-  }
-
-  throw new Error(
-    `Could not start bridge at ${BASE}/. Run: node ${BRIDGE_PATH}`
-  );
-}
-
-function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
-
-async function postStream(type, text = "") {
-  const { ok, status, data } = await fetchJson("/stream", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type, text }),
-  });
-  if (!ok) {
-    throw new Error(data?.error || `HTTP ${status}`);
-  }
-  return data;
-}
-
 const TOOLS = [
+  {
+    name: "duck_setup",
+    description:
+      "Full session setup: start the local bridge if needed, open the duck UI in the browser, and wire MCP configs. Call once when starting a rubber-duck session.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        open: {
+          type: "boolean",
+          description: "Open the browser (default true)",
+        },
+        mcp: {
+          type: "boolean",
+          description: "Merge MCP config into Copilot/Cursor (default true)",
+        },
+      },
+      additionalProperties: false,
+    },
+  },
   {
     name: "duck_ensure",
     description:
-      "Ensure the local rubber-duck HTTP bridge is running and return its URL. Call once at session start; open the URL in the user's browser.",
+      "Ensure the local rubber-duck HTTP bridge is running and return its URL.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
   },
   {
@@ -179,7 +110,10 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        text: { type: "string", description: "Chunk of spoken-friendly reply text" },
+        text: {
+          type: "string",
+          description: "Chunk of spoken-friendly reply text",
+        },
       },
       required: ["text"],
       additionalProperties: false,
@@ -205,6 +139,13 @@ const TOOLS = [
 
 async function callTool(name, args = {}) {
   switch (name) {
+    case "duck_setup": {
+      const result = await setupSession({
+        open: args.open !== false,
+        mcp: args.mcp !== false,
+      });
+      return okText(result);
+    }
     case "duck_ensure": {
       const result = await ensureBridge();
       return okText(result);
@@ -213,7 +154,7 @@ async function callTool(name, args = {}) {
       const health = await bridgeHealth();
       if (!health) {
         return errText(
-          `Bridge not reachable at ${BASE}/. Call duck_ensure or run: node ${BRIDGE_PATH}`
+          `Bridge not reachable at ${BASE}/. Call duck_setup or duck_ensure (or: node ${BRIDGE_PATH} setup).`
         );
       }
       return okText(health);
@@ -270,7 +211,7 @@ async function handleRequest(msg) {
         capabilities: { tools: {} },
         serverInfo: SERVER_INFO,
         instructions:
-          "Rubber duck debugging over a local browser UI. Call duck_ensure, open the URL for the user, then loop: duck_wait (retry while pending) → duck_say thinking → reason about the repo → duck_token chunks → duck_done. Agent and browser must share localhost.",
+          "Rubber duck debugging. At session start call duck_setup (or run node scripts/setup.mjs). Then loop: duck_wait (retry while pending) → duck_say thinking → reason about the repo → duck_token chunks → duck_done. Agent and browser must share localhost.",
       },
     });
     return;
@@ -329,7 +270,6 @@ function maybeExit() {
 function handleMessage(msg) {
   if (!msg || typeof msg !== "object") return;
 
-  // Notifications — no response
   if (msg.method && msg.id === undefined) {
     if (msg.method === "notifications/initialized") return;
     if (msg.method === "notifications/cancelled") return;
@@ -356,7 +296,10 @@ function handleMessage(msg) {
 
 function main() {
   log(`stdio MCP ready; bridge target ${BASE}/`);
-  const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
+  const rl = readline.createInterface({
+    input: process.stdin,
+    crlfDelay: Infinity,
+  });
   rl.on("line", (line) => {
     const trimmed = line.trim();
     if (!trimmed) return;
