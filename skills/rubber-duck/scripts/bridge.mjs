@@ -5,12 +5,17 @@
  * the browser and the coding agent.
  *
  * Usage:
- *   node bridge.mjs                 # start server
- *   node bridge.mjs wait            # block for next utterance (JSON)
+ *   node bridge.mjs setup           # one-shot: start + open + wire MCP
+ *   node bridge.mjs                 # start server (foreground)
+ *   node bridge.mjs wait [--ms N]   # short-poll next utterance (JSON)
  *   node bridge.mjs say --state X   # set duck state
  *   node bridge.mjs token "text"    # stream a token chunk
  *   node bridge.mjs done [--state X]
  *   node bridge.mjs health
+ *
+ * Agent-safe wait: default ~3s poll. On timeout prints {"pending":true}
+ * and exits 0 so Copilot/Cursor harnesses do not hang. Pass --block for
+ * a long wait, or --fail-on-timeout for exit code 2 on empty.
  */
 
 import http from "node:http";
@@ -18,15 +23,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import {
+  BASE,
+  HOST,
+  PORT,
+  DEFAULT_WAIT_MS,
+  ensureBridge,
+  setupSession,
+} from "./lib.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_ROOT = path.resolve(__dirname, "..");
 const APP_DIR = path.join(SKILL_ROOT, "app");
 const ASSETS_DIR = path.join(SKILL_ROOT, "assets");
-
-const HOST = process.env.RUBBERDUCK_HOST || "127.0.0.1";
-const PORT = Number(process.env.RUBBERDUCK_PORT || 3847);
-const BASE = `http://${HOST}:${PORT}`;
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -293,12 +302,41 @@ async function postJson(pathname, body) {
   return data;
 }
 
-async function cliWait() {
-  const waitMs = Number(process.env.RUBBERDUCK_WAIT_MS || 60000);
+const BLOCK_WAIT_MS = 60000;
+
+async function cliWait(args) {
+  await ensureBridge();
+  const block = Boolean(args.block);
+  const failOnTimeout = Boolean(args["fail-on-timeout"]);
+  let waitMs;
+  if (args.ms != null && args.ms !== true) {
+    waitMs = Number(args.ms);
+  } else if (process.env.RUBBERDUCK_WAIT_MS) {
+    waitMs = Number(process.env.RUBBERDUCK_WAIT_MS);
+  } else if (block) {
+    waitMs = BLOCK_WAIT_MS;
+  } else {
+    waitMs = DEFAULT_WAIT_MS;
+  }
+  if (!Number.isFinite(waitMs) || waitMs < 0) {
+    console.error("Error: --ms must be a non-negative number (milliseconds).");
+    process.exit(1);
+  }
+  waitMs = Math.min(waitMs, 120000);
+
   const res = await fetch(`${BASE}/pending?wait=${waitMs}`);
   if (res.status === 204) {
-    console.error("timeout: no utterance");
-    process.exit(2);
+    process.stdout.write(JSON.stringify({ pending: true, waitMs }) + "\n");
+    if (failOnTimeout) {
+      console.error("timeout: no utterance");
+      process.exit(2);
+    }
+    process.exit(0);
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    console.error(`Error: /pending HTTP ${res.status}: ${text}`);
+    process.exit(1);
   }
   const data = await res.json();
   process.stdout.write(JSON.stringify(data) + "\n");
@@ -310,8 +348,22 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === "--state" || a === "-s") {
       args.state = argv[++i];
+    } else if (a === "--ms") {
+      args.ms = argv[++i];
+    } else if (a === "--block") {
+      args.block = true;
+    } else if (a === "--fail-on-timeout") {
+      args["fail-on-timeout"] = true;
+    } else if (a === "--help" || a === "-h") {
+      args.help = true;
     } else if (a.startsWith("--")) {
-      args[a.slice(2)] = argv[++i] ?? true;
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next != null && !next.startsWith("-")) {
+        args[key] = argv[++i];
+      } else {
+        args[key] = true;
+      }
     } else {
       args._.push(a);
     }
@@ -319,9 +371,52 @@ function parseArgs(argv) {
   return args;
 }
 
+function printHelp() {
+  process.stdout.write(`Rubber Duck bridge — localhost UI + agent relay
+
+Usage:
+  node bridge.mjs setup [--no-open] [--no-mcp]
+  node bridge.mjs [serve]
+  node bridge.mjs ensure
+  node bridge.mjs wait [--ms N] [--block] [--fail-on-timeout]
+  node bridge.mjs say --state base|thinking|excited
+  node bridge.mjs token "text…"
+  node bridge.mjs done [--state base|thinking|excited]
+  node bridge.mjs health
+
+setup starts the bridge (background), opens the browser, and wires MCP.
+wait/say/token/done auto-ensure the bridge is up.
+
+wait defaults to a short poll (~${DEFAULT_WAIT_MS}ms). On timeout prints
+{"pending":true} and exits 0 (agent-safe). Use --block for ~${BLOCK_WAIT_MS}ms,
+or RUBBERDUCK_WAIT_MS / --ms to override.
+
+Env: RUBBERDUCK_HOST RUBBERDUCK_PORT RUBBERDUCK_WAIT_MS RUBBERDUCK_NO_OPEN
+`);
+}
+
 async function runCli(argv) {
   const args = parseArgs(argv);
+  if (args.help || args._[0] === "help") {
+    printHelp();
+    return;
+  }
   const cmd = args._[0] || "serve";
+
+  if (cmd === "setup" || cmd === "session") {
+    const result = await setupSession({
+      open: !args["no-open"],
+      mcp: !args["no-mcp"],
+    });
+    process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+    return;
+  }
+
+  if (cmd === "ensure") {
+    const result = await ensureBridge();
+    process.stdout.write(JSON.stringify(result) + "\n");
+    return;
+  }
 
   if (cmd === "serve" || cmd === "start") {
     startServer();
@@ -329,18 +424,20 @@ async function runCli(argv) {
   }
 
   if (cmd === "health") {
+    await ensureBridge();
     const res = await fetch(`${BASE}/health`);
     const data = await res.json();
-    process.stdout.write(JSON.stringify(data, null, 2) + "\n");
+    process.stdout.write(JSON.stringify(data) + "\n");
     process.exit(res.ok ? 0 : 1);
   }
 
   if (cmd === "wait") {
-    await cliWait();
+    await cliWait(args);
     return;
   }
 
   if (cmd === "say") {
+    await ensureBridge();
     const state = args.state || args._[1] || "base";
     await postJson("/stream", { type: "state", text: state });
     process.stdout.write(JSON.stringify({ ok: true, state }) + "\n");
@@ -348,6 +445,7 @@ async function runCli(argv) {
   }
 
   if (cmd === "token") {
+    await ensureBridge();
     const text = args._.slice(1).join(" ");
     if (!text) {
       console.error("usage: bridge.mjs token \"text\"");
@@ -359,6 +457,7 @@ async function runCli(argv) {
   }
 
   if (cmd === "done") {
+    await ensureBridge();
     const state = args.state || "";
     await postJson("/stream", { type: "done", text: state });
     process.stdout.write(JSON.stringify({ ok: true, state: state || null }) + "\n");
@@ -366,6 +465,7 @@ async function runCli(argv) {
   }
 
   if (cmd === "error") {
+    await ensureBridge();
     const text = args._.slice(1).join(" ") || "error";
     await postJson("/stream", { type: "error", text });
     process.stdout.write(JSON.stringify({ ok: true }) + "\n");
@@ -373,7 +473,7 @@ async function runCli(argv) {
   }
 
   console.error(
-    "Unknown command. Use: serve | wait | say --state X | token TEXT | done [--state X] | health"
+    "Unknown command. Use: setup | ensure | serve | wait | say | token | done | health | help"
   );
   process.exit(1);
 }
@@ -411,4 +511,12 @@ if (isMain) {
   });
 }
 
-export { createServer, BASE, HOST, PORT };
+export {
+  createServer,
+  BASE,
+  HOST,
+  PORT,
+  DEFAULT_WAIT_MS,
+  postJson,
+  waitForUtterance,
+};

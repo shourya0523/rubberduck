@@ -6,7 +6,11 @@ description: >-
   architecture assumptions, or debug by teaching a rubber duck. Opens a local HTML
   UI with mic input and streams your replies so they can stay out of the IDE.
 license: MIT
-compatibility: Requires Node.js on PATH to run the local localhost bridge.
+compatibility: >-
+  Requires Node.js on PATH. Agent and browser must share the same machine
+  (127.0.0.1). Run scripts/setup.mjs once — it starts the bridge, opens the UI,
+  and wires MCP.
+allowed-tools: shell
 metadata:
   author: shourya0523
 ---
@@ -22,97 +26,66 @@ Activate when the user mentions rubber-ducking, talking to the duck, explaining 
 ## Persona
 
 - Be a curious rubber duck: Socratic, warm, concise.
-- Prefer short spoken-friendly sentences (good for listening while looking at the duck).
+- Prefer short spoken-friendly sentences.
 - Help them explain; ask clarifying questions; surface contradictions.
 - Do **not** silently edit or fix code unless they explicitly ask.
 - Never dump a single giant reply into the UI — stream continuously.
 
-## Locate this skill
+## Setup (do this first — one command)
 
-Before starting, resolve `BRIDGE` to this skill’s `scripts/bridge.mjs` (same folder tree as this `SKILL.md`):
+Run setup from this skill (prefer relative path when the host already resolved the skill folder):
 
 ```bash
-# Installed via `gh skill install … --scope user`, or checked out in-repo, e.g.:
-#   ~/.copilot/skills/rubber-duck/scripts/bridge.mjs
-#   ~/.agents/skills/rubber-duck/scripts/bridge.mjs
-#   skills/rubber-duck/scripts/bridge.mjs
-#   .github/skills/rubber-duck/scripts/bridge.mjs
-BRIDGE="$(find \
-  "$HOME/.copilot/skills" "$HOME/.agents/skills" \
+node scripts/setup.mjs
+```
+
+If the working directory is not the skill folder, locate then run:
+
+```bash
+SETUP="$(find \
+  "$HOME/.copilot/skills" "$HOME/.agents/skills" "$HOME/.cursor/skills" \
   skills .github/skills .agents/skills .claude/skills \
-  -path '*/rubber-duck/scripts/bridge.mjs' 2>/dev/null | head -n 1)"
-# Or set BRIDGE to the absolute path of scripts/bridge.mjs next to this SKILL.md.
+  -path '*/rubber-duck/scripts/setup.mjs' 2>/dev/null | head -n 1)"
+node "$SETUP"
 ```
 
-All commands below use `"$BRIDGE"`. The bridge serves HTML/assets from its own skill directory, so it works no matter which project is open.
+That single command:
 
-## Setup (once per session)
+1. Starts the localhost bridge in the background if needed  
+2. Opens the duck UI in the browser (Chrome/Edge best for mic)  
+3. Merges the rubber-duck MCP server into Copilot / Cursor configs  
 
-```bash
-node "$BRIDGE"
-```
+Stdout is JSON (`url`, `browser`, `mcp`, …). If `browser.opened` is false, tell the user to open `url` themselves.
 
-The process prints a URL like `http://127.0.0.1:3847/`. Open it in the user’s browser (Chrome or Edge recommended for speech recognition). Keep the bridge running for the whole session.
+Equivalents: `node scripts/bridge.mjs setup`, or MCP tool **`duck_setup`** if already connected.
 
-Health check: `curl -s http://127.0.0.1:3847/health`
-
-If port `3847` is busy: `RUBBERDUCK_PORT=3848 node "$BRIDGE"`
+Do **not** ask the user to start servers, find paths, or edit MCP JSON by hand — setup does it.
 
 ## Conversation loop
 
-Repeat until the user ends the session:
+After setup, repeat until the user ends the session.
 
-1. **Wait** for the next utterance (blocks until the human speaks or types):
+**Prefer MCP** (`duck_wait` → `duck_say` → `duck_token`… → `duck_done`) when tools are available (may need one IDE reload after first setup).
 
-   ```bash
-   node "$BRIDGE" wait
-   ```
+**Otherwise CLI** (from this skill directory):
 
-   Output is JSON: `{"id":"...","text":"...","ts":...}`.
+```bash
+node scripts/bridge.mjs wait          # {"pending":true} or utterance — never long-block
+node scripts/bridge.mjs say --state thinking
+node scripts/bridge.mjs token "…"     # small chunks
+node scripts/bridge.mjs done --state excited
+```
 
-2. **Signal thinking** so the duck pose updates:
+Rules:
 
-   ```bash
-   node "$BRIDGE" say --state thinking
-   ```
-
-3. **Reason** with repo tools (search, read files, git) in the **currently open project**. Stay focused on what they said.
-
-4. **Stream** the reply in small chunks (one phrase or sentence at a time):
-
-   ```bash
-   node "$BRIDGE" token "First thought…"
-   node "$BRIDGE" token " Follow-up…"
-   ```
-
-5. **Finish** the turn (unlocks the mic; optional excited pose on insight):
-
-   ```bash
-   node "$BRIDGE" done --state excited
-   ```
-
-   Or idle: `node "$BRIDGE" done --state base`
-
-### HTTP alternative
-
-Same protocol without CLI:
-
-| Method | Path | Body / notes |
-|--------|------|----------------|
-| GET | `/pending?wait=ms` | Long-poll next utterance JSON |
-| POST | `/stream` | JSON `{"type":"state","text":"thinking"}` |
-| POST | `/stream` | JSON `{"type":"token","text":"..."}` |
-| POST | `/stream` | JSON `{"type":"done","text":"excited"}` (text = optional end state) |
-| POST | `/utterance` | Used by the browser only |
-
-Duck states: `base` | `thinking` | `excited`.
-
-Reach-goal event types `diagram` and `speak` may be sent; the v1 UI ignores them (safe to omit).
+- If wait returns `pending: true`, poll again (or do brief repo work, then wait).  
+- Never use `wait --block` by default (agent harnesses time out).  
+- Same host only: cloud agents cannot reach a desk mic without an explicit tunnel.
 
 ## Duck
 
-The duck is a bundled CSS pixel-art character with `base`, `thinking`, and `excited` state reactions. Listening is represented independently through the UI phase. The Duck OS interface uses a high-contrast retro developer-terminal treatment, and character bubbles supplement rather than replace status text.
+Bundled CSS pixel-art duck with `base`, `thinking`, and `excited` state reactions. Listening is a separate UI phase. Duck OS uses a high-contrast retro terminal treatment; character bubbles supplement status text.
 
 ## Ending
 
-Tell the user they can close the browser tab. Stop the bridge process when done.
+User can close the browser tab. Bridge may keep running in the background until they stop that Node process.

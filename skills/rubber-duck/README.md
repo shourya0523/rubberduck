@@ -22,16 +22,16 @@ cp -R . ~/.agents/skills/rubber-duck
 
 Requires Node.js. Prefer Chrome/Edge for the mic.
 
-Then: Agent chat → **Start a rubber duck session**.
+Then: Agent chat → **Start a rubber duck session**. The skill runs **`node scripts/setup.mjs`** once — starts bridge, opens UI, wires MCP. No manual server/MCP steps.
 
-## Manual bridge
+## Manual setup (optional)
 
 ```bash
-node scripts/bridge.mjs
+node scripts/setup.mjs
+# or
+node scripts/bridge.mjs setup
 ```
-
-Open `http://127.0.0.1:3847/`.
 
 ## Duck
 
-The Duck OS UI uses a bundled CSS pixel-art duck with base, thinking, excited, and listening reactions. Pixel speech bubbles add character without replacing the session status or response text.
+Duck OS UI: bundled CSS pixel-art duck with base, thinking, excited, and listening reactions. Pixel speech bubbles add character without replacing session status or response text.

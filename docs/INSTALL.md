@@ -103,6 +103,24 @@ Skill is already at `skills/rubber-duck/` (and `.github/skills/rubber-duck` for 
 
 ---
 
+## Setup after install (automatic via skill)
+
+When the agent starts a session it runs:
+
+```bash
+node scripts/setup.mjs
+```
+
+That starts the bridge, opens the UI, and merges MCP into Copilot/Cursor. You can also run it yourself after install:
+
+```bash
+node ~/.copilot/skills/rubber-duck/scripts/setup.mjs --no-open
+```
+
+Details: [skills/rubber-duck/references/mcp.md](../skills/rubber-duck/references/mcp.md).
+
+---
+
 ## Where installs land
 
 | Scope / host | Location |

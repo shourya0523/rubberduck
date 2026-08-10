@@ -162,12 +162,29 @@ else
   gh_install
 fi
 
+# Best-effort: wire MCP + ensure bridge without opening a browser in CI/SSH.
+SETUP_CANDIDATES=(
+  "${HOME}/.copilot/skills/${SKILL_NAME}/scripts/setup.mjs"
+  "${HOME}/.agents/skills/${SKILL_NAME}/scripts/setup.mjs"
+  "${HOME}/.cursor/skills/${SKILL_NAME}/scripts/setup.mjs"
+  "${SKILL_SRC}/scripts/setup.mjs"
+)
+for setup in "${SETUP_CANDIDATES[@]}"; do
+  if [[ -f "$setup" ]]; then
+    echo "Running session setup (no browser): $setup"
+    if command -v node >/dev/null 2>&1; then
+      node "$setup" --no-open || echo "Warning: setup.mjs failed (bridge/MCP). Agent can retry via skill." >&2
+    fi
+    break
+  fi
+done
+
 cat <<EOF
 
 Next:
   1. Reload your IDE / start a new Agent chat
   2. Say: Start a rubber duck session
-  3. Open the printed URL (http://127.0.0.1:3847/) in Chrome or Edge
+     (skill runs scripts/setup.mjs — bridge + browser + MCP)
 
 Docs: ${ROOT}/docs/INSTALL.md
 EOF

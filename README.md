@@ -31,49 +31,56 @@ Maintainers: `gh skill publish --dry-run` then `gh skill publish --tag v0.1.0`.
 
 1. Reload IDE → Copilot/Cursor **Agent** chat  
 2. Say: **Start a rubber duck session**  
-3. Open `http://127.0.0.1:3847/` in Chrome or Edge  
+3. Agent runs `node scripts/setup.mjs` (bridge + browser + MCP)  
 4. Talk or type to the duck  
 
 ## Manual run (no agent)
 
 ```bash
-node skills/rubber-duck/scripts/bridge.mjs
+node skills/rubber-duck/scripts/setup.mjs
 ```
 
 ## How it fits together
 
-1. The skill (`skills/rubber-duck/SKILL.md`) tells the agent when and how to run a session.
-2. `scripts/bridge.mjs` serves the UI on localhost and relays messages over SSE.
-3. You speak (Web Speech API) or type; the agent waits on `bridge.mjs wait`, thinks with repo tools, then streams tokens with `bridge.mjs token` / `done`.
+1. **`setup.mjs`** — one-shot: start bridge, open UI, wire MCP configs.  
+2. **Skill** (`SKILL.md`) — Socratic loop after setup.  
+3. **Bridge / MCP** — short-poll wait + stream tokens (no 60s shell hang).  
 
 ```text
-You (mic) → HTML → POST /utterance → agent waits
-agent → POST /stream (tokens) → SSE → HTML (live)
+setup → bridge + browser + MCP
+You (mic) → HTML → agent duck_wait / wait (short-poll)
+agent → duck_token / stream → SSE → HTML
 ```
+
+Same-host only: agent + bridge + browser on one machine (or an explicit tunnel).
 
 ## Agent CLI cheatsheet
 
 ```bash
-BRIDGE=~/.copilot/skills/rubber-duck/scripts/bridge.mjs   # after --scope user
-# or: BRIDGE=skills/rubber-duck/scripts/bridge.mjs
+cd ~/.copilot/skills/rubber-duck   # after --scope user
+# or: cd skills/rubber-duck
 
-node "$BRIDGE"
-node "$BRIDGE" wait
-node "$BRIDGE" say --state thinking
-node "$BRIDGE" token "What happens if that map is empty?"
-node "$BRIDGE" done --state excited
+node scripts/setup.mjs
+node scripts/bridge.mjs wait
+node scripts/bridge.mjs say --state thinking
+node scripts/bridge.mjs token "What happens if that map is empty?"
+node scripts/bridge.mjs done --state excited
 ```
 
-Env vars: `RUBBERDUCK_HOST` (default `127.0.0.1`), `RUBBERDUCK_PORT` (default `3847`).
+Env: `RUBBERDUCK_HOST`, `RUBBERDUCK_PORT`, `RUBBERDUCK_WAIT_MS`, `RUBBERDUCK_NO_OPEN=1`.
 
 ## Duck
 
-The duck is hand-drawn CSS pixel art. State changes are CSS-driven (`data-state="base|thinking|excited"`), with listening shown as a separate UI phase.
+Duck OS UI: hand-drawn CSS pixel art. State changes are CSS-driven (`data-state="base|thinking|excited"`), with listening shown as a separate UI phase.
 
 ## Layout
 
 ```text
 skills/rubber-duck/              # canonical (gh skill install + publish)
+  scripts/setup.mjs              # one-shot: bridge + browser + MCP
+  scripts/bridge.mjs             # HTTP + short-poll CLI
+  scripts/mcp.mjs                # stdio MCP tools
+  references/mcp.md              # MCP notes (setup wires configs)
 scripts/install.sh               # multi-pathway installer
 docs/INSTALL.md                  # install + publish guide
 .github/skills/rubber-duck → …   # Copilot project discovery when cloning this repo
@@ -86,4 +93,6 @@ Do not commit `.agents/skills` / `.claude/skills` — those are **install destin
 
 - Speech recognition in the HTML (Chrome/Edge)
 - Streaming agent replies over SSE
-- No runtime CDN or media files — duck is bundled CSS pixel art
+- Short-poll wait (never rely on long-blocking shell waits)
+- Agent and browser share localhost
+- No runtime CDN — duck is bundled CSS pixel art
